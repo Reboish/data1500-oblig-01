@@ -1,6 +1,6 @@
 # Besvarelse - Refleksjon og Analyse
 
-**Student:** [Ditt navn]
+**Student:** [Rebin Hawar Aradeni]
 
 **Studentnummer:** [Ditt studentnummer]
 
@@ -14,11 +14,16 @@
 
 **Identifiserte entiteter:**
 
-[Skriv ditt svar her - list opp alle entitetene du har identifisert]
+Kunde, stasjon, sykkel, utleie, lås.
 
 **Attributter for hver entitet:**
 
-[Skriv ditt svar her - list opp attributtene for hver entitet]
+Kunde: kunde_id (PK), mobilnummer, epost, fornavn, etternavn.
+Stasjon: stasjon_id (PK), navn, address.
+Sykkel: sykkel_id (PK), laas_id (FK).
+Utleie: utleie_id (PK), kunde_id (PK), sykkel_id (PK), utlevert_tid, innlevert_tid, leiebelop.
+lås: laas_id (PK), stasjon_id (FK).
+
 
 ---
 
