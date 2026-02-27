@@ -59,7 +59,7 @@ INSERT INTO stasjon (navn, adresse) VALUES
 ('Togstasjonen','Jernbanetorget 1');
 
 -- LÅSER (100 = 20 per stasjon)
-INSERT INTO laas (staasjon_id)
+INSERT INTO laas (stasjon_id)
   SELECT s.stasjon_id
   FROM stasjon s, generate_series(1,20);
 
@@ -113,7 +113,7 @@ CREATE ROLE kunde;
 CREATE USER kunde_1 WITH PASSWORD 'kunde123';
 GRANT kunde TO kunde_1;
 
-GRANT CONNECT ON DATABASE postgres TO kunde;
+GRANT CONNECT ON DATABASE oblig01 TO kunde;
 GRANT USAGE ON SCHEMA public TO kunde;
 
 GRANT SELECT, INSERT ON kunde, utleie TO kunde;
