@@ -109,6 +109,16 @@ FROM generate_series(1,50);
 -- DBA setninger (rolle: kunde, bruker: kunde_1)
 
 
+CREATE ROLE kunde;
+CREATE USER kunde_1 WITH PASSWORD 'kunde123';
+GRANT kunde TO kunde_1;
+
+GRANT CONNECT ON DATABASE postgres TO kunde;
+GRANT USAGE ON SCHEMA public TO kunde;
+
+GRANT SELECT, INSERT ON kunde, utleie TO kunde;
+GRANT SELECT ON stasjon, laas, sykkel TO kunde;
+
 
 -- Eventuelt: Opprett indekser for ytelse
 
