@@ -122,6 +122,13 @@ GRANT SELECT ON stasjon, laas, sykkel TO kunde;
 
 -- Eventuelt: Opprett indekser for ytelse
 
+CREATE INDEX idx_laas_stasjon ON laas(stasjon_id);
+CREATE INDEX idx_sykkel_laas ON sykkel(laas_id);
+CREATE INDEX idx_utleie_kunde ON utleie(kunde_id);
+CREATE INDEX idx_utleie_sykkel ON utleie(sykkel_id);
+CREATE INDEX idx_utleie_fra_laas ON utleie(fra_laas_id);
+CREATE INDEX idx_utleie_til_laas ON utleie(til_laas_id);
+
 
 
 -- Vis at initialisering er fullført (kan se i loggen fra "docker-compose log"
