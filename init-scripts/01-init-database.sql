@@ -13,7 +13,7 @@ CREATE TABLE stasjon (
 
 CREATE TABLE laas(
   laas_id BIGSERIAL PRIMARY KEY,
-  stasjon_id BIGINT NOT NULL REFERENCES stasjon(staasjon_id)
+  stasjon_id BIGINT NOT NULL REFERENCES stasjon(stasjon_id)
 );
 
 CREATE TABLE sykkel(
