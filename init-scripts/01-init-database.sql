@@ -66,11 +66,11 @@ INSERT INTO laas (stasjon_id)
 -- SYKLER (100)
 
 INSERT INTO sykkel (laas_id)
-SELECT NULL FROM generate_series(1,20);
+SELECT NULL FROM generate_series(1,100);
 
 -- Koble 80 sykler til låser (20 er "utleid")
 UPDATE sykkel
-SET laas_id = l.laas_id
+SET laas_id = sykkel_id;
 FROM (
     SELECT laas_id FROM laas ORDER BY laas_id LIMIT 80
 ) l
@@ -79,29 +79,15 @@ WHERE sykkel.sykkel_id IN (
 );
 
 -- UTLEIER (50)
-INSERT INTO utleie (
-    kunde_id,
-    sykkel_id,
-    utlevert_tid,
-    innlevert_tid,
-    leiebelop,
-    fra_laas_id,
-    til_laas_id
-)
+INSERT INTO utleie (kunde_id, sykkel_id, utlevert_tid, innlevert_tid, leiebelop, fra_laas_id, til_laas_id)
 SELECT
     (random()*4 + 1)::bigint,
-    (random()*99 + 1)::bigint,
+    (random()*99 + 1)::bigint, -- Velger sykkel 1-100
     NOW() - (random()*interval '10 days'),
-    CASE 
-        WHEN random() > 0.3 THEN NOW() - (random()*interval '1 days')
-        ELSE NULL
-    END,
+    CASE WHEN random() > 0.3 THEN NOW() - (random()*interval '1 days') ELSE NULL END,
     ROUND((random()*200 + 50)::numeric, 2),
-    (random()*99 + 1)::bigint,
-    CASE 
-        WHEN random() > 0.3 THEN (random()*99 + 1)::bigint
-        ELSE NULL
-    END
+    (random()*99 + 1)::bigint, -- Velger lås 1-100
+    CASE WHEN random() > 0.3 THEN (random()*99 + 1)::bigint ELSE NULL END
 FROM generate_series(1,50);
 
 
