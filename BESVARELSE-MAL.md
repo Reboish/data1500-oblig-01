@@ -360,6 +360,8 @@ Når vi inkluderer faste data for stasjoner, sykler og kunder, samt legger inn l
 
 **Analyse av CSV-filen (`data/utleier.csv`):**
 
+
+
 **Problem 1: Redundans**
 
 [Redundans betyr at de samme dataene lagres flere ganger, noe som kaster bort plass.
@@ -367,6 +369,9 @@ Når vi inkluderer faste data for stasjoner, sykler og kunder, samt legger inn l
 Eksempel: Informasjonen om "Ole Hansen" (fornavn, etternavn, mobilnr, epost) lagres i sin helhet på rad 2, 3 og 8.
 
 Eksempel: Navn og adresse til "Sentrum Stasjon" gjentas hver eneste gang noen starter eller slutter der, for eksempel på rad 2, 7 og 11.]
+
+
+
 
 **Problem 2: Inkonsistens**
 
@@ -376,15 +381,15 @@ Eksempel: Hvis Kari Olsen (rad 4, 5 og 10) bytter telefonnummer, må vi huske å
 
 Eksempel: En skrivefeil i adressen "Karl Johans gate 1 Oslo" på bare én av radene vil føre til at spørringer etter stasjonen feiler for den spesifikke utleien.]
 
+
+
 **Problem 3: Oppdateringsanomalier**
 
-[Dette handler om problemer når vi skal endre data:
+[Datamodellen kan føre til flere typer anomalier når vi endrer data. En sletteanomali oppstår dersom vi sletter den eneste utleien til Erik Larsen, da vi samtidig fjerner all informasjon om at han eksisterer som kunde. En innsettingsanomali kan skje fordi vi ikke kan registrere en ny stasjon i systemet før noen faktisk har leid en sykkel derfra, siden stasjonsinformasjon er bundet til en utleie-rad. Til slutt kan det oppstå en oppdateringsanomali, hvor én endring krever at mange rader oppdateres samtidig, noe som øker risikoen for feil og inkonsistens i databasen.
 
-Sletteanomali: Hvis vi sletter den eneste utleien til Erik Larsen (rad 9), sletter vi samtidig all informasjon om at Erik Larsen i det hele tatt eksisterer som kunde.
 
-Innsettingsanomali: Vi kan ikke registrere en ny stasjon i systemet før noen faktisk har leid en sykkel derfra, fordi stasjonsinfoen er låst til en utleie-rad.
 
-Oppdateringsanomali: Som nevnt under inkonsistens; én endring krever oppdatering av mange rader, noe som øker risikoen for feil.]
+
 
 **Fordeler med en indeks:**
 
