@@ -219,7 +219,6 @@ Modellen tilfredsstiller 3NF fordi ingen ikke-nøkkelattributter er transitivt a
 
 **Eventuelle justeringer:**
 
-[Skriv ditt svar her - hvis modellen ikke var på 3NF, forklar hvilke justeringer du har gjort]
 
 ---
 
@@ -229,7 +228,7 @@ Modellen tilfredsstiller 3NF fordi ingen ikke-nøkkelattributter er transitivt a
 
 **Plassering av SQL-skript:**
 
-[Bekreft at du har lagt SQL-skriptet i `init-scripts/01-init-database.sql`]
+check
 
 **Antall testdata:**
 
@@ -364,14 +363,14 @@ Når vi inkluderer faste data for stasjoner, sykler og kunder, samt legger inn l
 
 **Problem 1: Redundans**
 
-[Redundans innebærer at de samme dataene lagres flere ganger, noe som kaster bort lagringsplass og kan føre til inkonsistens. Feks lagres informasjon om Ole Hansen, fornavn, etternavn, mobilnummer og e-post, på rad 2, 3 og 8. På samme måte gjentas navn og adresse til Sentrum Stasjon hver gang noen starter eller avslutter en utleie der, for eksempel på rad 2, 7 og 11.]
+[Redundans innebærer at de samme dataene lagres flere ganger, noe som kaster bort lagringsplass og kan føre til inkonsistens. Feks lagres informasjon om Ole Hansen, fornavn, etternavn, mobilnummer og e-post, på rad 2, 3 og 8. På samme måte gjentas navn og adresse til Sentrum Stasjon hver gang noen starter eller avslutter en utleie der, for eksempel på rad 2, 7 og 11.
 
 
 
 
 **Problem 2: Inkonsistens**
 
-[Inkonsistens oppstår når de samme dataene lagres flere steder, men ikke lenger er like. Feks, hvis Kari Olsen (rad 4, 5 og 10) bytter telefonnummer, må oppdateringen gjøres på alle rader; hvis vi glemmer rad 10, vil databasen gi ulike svar på hva nummeret hennes er. På samme måte kan en skrivefeil i adressen Karl Johans gate 1 Oslo på bare én rad føre til at spørringer etter stasjonen feiler for den spesifikke utleien.]
+[Inkonsistens oppstår når de samme dataene lagres flere steder, men ikke lenger er like. Feks, hvis Kari Olsen (rad 4, 5 og 10) bytter telefonnummer, må oppdateringen gjøres på alle rader; hvis vi glemmer rad 10, vil databasen gi ulike svar på hva nummeret hennes er. På samme måte kan en skrivefeil i adressen Karl Johans gate 1 Oslo på bare én rad føre til at spørringer etter stasjonen feiler for den spesifikke utleien.
 
 
 
@@ -385,19 +384,19 @@ Når vi inkluderer faste data for stasjoner, sykler og kunder, samt legger inn l
 
 **Fordeler med en indeks:**
 
-[Hvis man ikke hadde en indeks måtte databasen utføre en Sequential Scan. Det betyr at den må lese hver eneste rad fra start til slutt for å finne feks. alle utleier for City Bike Pro. Med en indeks lager vi en snarvei som peker direkte til radene.]
+Hvis man ikke hadde en indeks måtte databasen utføre en Sequential Scan. Det betyr at den må lese hver eneste rad fra start til slutt for å finne feks. alle utleier for City Bike Pro. Med en indeks lager vi en snarvei som peker direkte til radene.
 
 **Case 1: Indeks passer i RAM**
 
-[Når indeksen får plass i arbeidsminnet (RAM), kan databasen finne riktig peker lynraskt uten å røre den trege harddisken. Den slår opp i en søkestruktur altså som et tre, finner adressen til raden på disken, og går direkte dit for å hente resten av dataene.]
+Når indeksen får plass i arbeidsminnet (RAM), kan databasen finne riktig peker lynraskt uten å røre den trege harddisken. Den slår opp i en søkestruktur altså som et tre, finner adressen til raden på disken, og går direkte dit for å hente resten av dataene.
 
 **Case 2: Indeks passer ikke i RAM**
 
-[Hvis datasettet er enormt, at den ermange millioner rader, må indeksen lagres på disk. For å sortere eller søke i disse dataene effektivt brukes ofte flettesortering (external merge sort). Man sorterer små biter i RAM, skriver dem til disk, og fletter dem sammen til en ferdig sortert struktur som minimerer antall ganger vi må lese fra disken.]
+Hvis datasettet er enormt, at den ermange millioner rader, må indeksen lagres på disk. For å sortere eller søke i disse dataene effektivt brukes ofte flettesortering (external merge sort). Man sorterer små biter i RAM, skriver dem til disk, og fletter dem sammen til en ferdig sortert struktur som minimerer antall ganger vi må lese fra disken.
 
 **Datastrukturer i DBMS:**
 
-[En B+-tre-indeks er den vanligste strukturen og er svært effektiv fordi den er balansert, noe som gir lik søketid for alle verdier, samtidig som den støtter områdesøk, for eksempel «finn alle utleier mellom juni og august». Dataene lagres i løvnodene nederst, noe som gjør sekvensiell lesing veldig effektiv. En hash-indeks gir derimot ekstremt raske eksakte oppslag, for eksempel «finn kunde med epost X», men den kan ikke brukes til sortering eller områdesøk, siden den ikke har informasjon om rekkefølgen på verdiene.]
+En B+-tre-indeks er den vanligste strukturen og er svært effektiv fordi den er balansert, noe som gir lik søketid for alle verdier, samtidig som den støtter områdesøk, for eksempel «finn alle utleier mellom juni og august». Dataene lagres i løvnodene nederst, noe som gjør sekvensiell lesing veldig effektiv. En hash-indeks gir derimot ekstremt raske eksakte oppslag, for eksempel «finn kunde med epost X», men den kan ikke brukes til sortering eller områdesøk, siden den ikke har informasjon om rekkefølgen på verdiene.
 
 ---
 
@@ -408,10 +407,10 @@ Når vi inkluderer faste data for stasjoner, sykler og kunder, samt legger inn l
 
 **Foreslått datastruktur:**
 
-[LSM-tree (Log-Structured Merge-tree) eller en enkel Heap-fil.]
+LSM-tree eller en enkel Heap-fil.
 
 **Begrunnelse:**
-logging er en LSM-tree (Log-Structured Merge-tree) eller en enkel heap-fil godt egnet datastrukturvalg, siden logging er typisk en "append-only"-operasjon der nye hendelser legges til, og gamle logginnslag sjelden endres eller slettes. Tradisjonelle B-trær, som PostgreSQL bruker for vanlige indekser, er mindre effektive for denne typen arbeidsmengde, fordi de krever mye vedlikehold og balansering ved hver innsetting.
+logging er en LSM-tree eller en enkel heap-fil godt egnet datastrukturvalg, siden logging er typisk en "append-only"-operasjon der nye hendelser legges til, og gamle logginnslag sjelden endres eller slettes. Tradisjonelle B-trær, som PostgreSQL bruker for vanlige indekser, er mindre effektive for denne typen arbeidsmengde, fordi de krever mye vedlikehold og balansering ved hver innsetting.
 
 **Skrive-operasjoner:**
 Skriveoperasjoner i både heap-filer og LSM-trær er svært raske, ettersom de utnytter sekvensiell I/O. I en heap-fil skrives data rett til slutten av fila ($O(1)$), mens et LSM-tre samler skriver i en buffer i minnet og skriver store sorterte blokker til disk. Dette er mye mer effektivt enn tilfeldig I/O, hvor skrivehodet må hoppe rundt på en tradisjonell harddisk, eller hvor SSD-kontrolleren må håndtere mange små operasjoner. På denne måten sikres det at loggingen ikke blir en flaskehals for resten av databasen.
@@ -429,36 +428,32 @@ Leseoperasjoner er derimot sjeldne i et loggsystem, vanligvis kun ved feilsøkin
 
 **Hvor bør validering gjøres:**
 
-[Validering bør gjøres i alle lagene (nettleser, applikasjonslag og database). Dette kalles en lagdelt sikkerhetsstrategi. Hvert lag har sitt eget formål: nettleseren for brukervennlighet, applikasjonslaget for sikkerhet og forretningslogikk, og databasen som den ultimate garantisten for dataintegritet.]
+Validering bør gjøres i alle lagene (nettleser, applikasjonslag og database). Dette kalles en lagdelt sikkerhetsstrategi. Hvert lag har sitt eget formål: nettleseren for brukervennlighet, applikasjonslaget for sikkerhet og forretningslogikk, og databasen som den ultimate garantisten for dataintegritet.
 
 **Validering i nettleseren:**
 
-[Fordeler: Gir umiddelbar tilbakemelding til brukeren (f.eks. en rød ramme rundt et felt før man trykker "send"). Dette gir en mye bedre brukeropplevelse (UX) fordi man slipper å vente på et svar fra serveren for enkle feil som manglende @ i en e-post.
-
-Ulemper: Det er totalt usikkert. En teknisk kyndig person kan enkelt skru av JavaScript i nettleseren eller sende data rett til serveren via verktøy som Postman eller curl, og dermed hoppe over hele valideringen.]
+Fordelen med klient-side validering er at den gir umiddelbar tilbakemelding til brukeren, for eksempel ved å markere et felt med rød ramme før skjemaet sendes. Dette forbedrer brukeropplevelsen (UX) betydelig, fordi man slipper å vente på svar fra serveren for enkle feil, som en manglende @ i en e-postadresse. 
+Ulempen er at det ikke gir sikkerhet; en teknisk kyndig person kan enkelt deaktivere JavaScript i nettleseren eller sende data direkte til serveren med verktøy som Postman eller curl, og dermed omgå all validering på klienten.
 
 **Validering i applikasjonslaget:**
 
-[Fordeler: Dette er "hjernen" i systemet. Her kan vi utføre kompleks forretningslogikk som databasen kanskje ikke vet om (f.eks. sjekke om en bruker er gammel nok via et eksternt API). Det er her vi stopper ondsinnede angrep (som SQL Injection) før de når databasen.
-
-Ulemper: Hvis noen ved en feil skriver et nytt script som snakker direkte med databasen (forbi applikasjonslaget), kan de fortsatt putte "søppel" inn i systemet hvis ikke databasen selv sier stopp.]
+Fordelen med applikasjonslaget er at det fungerer som "hjernen" i systemet, der kompleks forretningslogikk kan utføres, for eksempel å sjekke om en bruker er gammel nok via et eksternt API. Det er også her vi kan stoppe ondsinnede angrep, som SQL-injection, før de når databasen. Ulempen er at hvis noen ved en feil skriver et script som går direkte mot databasen og omgår applikasjonslaget, kan de fortsatt sette inn ugyldige eller skadelige data dersom databasen ikke selv håndhever restriksjoner.
 
 **Validering i databasen:**
 
-[Fordeler: Dette er den siste skansen. Ved å bruke constraints som NOT NULL, UNIQUE, CHECK og FOREIGN KEY (slik du gjorde i Oppgave 2.2), garanterer du at dataene er konsistente uansett hvordan de kom inn. Selv om en bug i Java-koden slipper gjennom en negativ pris, vil databasen nekte å lagre den.
+Fordelen med å bruke databasen som siste sikkerhetssperre er at den garanterer konsistente data gjennom constraints som NOT NULL, UNIQUE, CHECK og FOREIGN KEY, slik som vist i Oppgave 2.2. Selv om en bug i applikasjonen skulle slippe gjennom for eksempel en negativ pris, vil databasen nekte å lagre den. Ulempen er at feilmeldingene fra databasen ofte er tekniske og lite brukervennlige for vanlige brukere, og det kan være mer ressurskrevende å oppdage en feil her, siden dataene allerede har reist gjennom hele nettverket.
 
-Ulemper: Feilmeldinger fra databasen er ofte tekniske og lite brukervennlige for en vanlig person. Det er også mer "dyrt" i form av ressurser å oppdage en feil her, siden dataene allerede har reist gjennom hele nettverket.]
+
+
 
 **Konklusjon:**
 
-[Vi validerer i alle lag for å kombinere det beste fra alle verdener:
+Vi validerer i alle lag for å kombinere det beste fra alle verdener:
 
 Nettleser: For hastighet og brukervennlighet.
-
 Applikasjonslag: For sikkerhet og kompleks logikk.
-
 Database: For absolutt integritet og varig datakvalitet.
-Uten validering i alle ledd risikerer man enten et system som er frustrerende å bruke, eller et system med "skitne" data som før eller siden vil krasje applikasjonen.]
+Uten validering i alle ledd risikerer man enten et system som er frustrerende å bruke, eller et system med "skitne" data som før eller siden vil krasje applikasjonen.
 
 ---
 
@@ -466,66 +461,70 @@ Uten validering i alle ledd risikerer man enten et system som er frustrerende å
 
 **Hva har du lært så langt i emnet:**
 
-[Gjennom de første ukene har jeg fått en dypere forståelse for forskjellen på ustrukturerte data (flate filer) og relasjonelle databaser. Jeg har lært hvordan man modellerer virkeligheten ved hjelp av entiteter og relasjoner, og hvordan normalisering bidrar til å fjerne dataredundans. Sentrale konsepter som primærnøkler, fremmednøkler og dataintegritet har gått fra å være teoretiske begreper til praktiske verktøy jeg bruker for å sikre at data henger logisk sammen.]
+Gjennom de første ukene har jeg fått en dypere forståelse for forskjellen på ustrukturerte data (flate filer) og relasjonelle databaser. Jeg har lært hvordan man modellerer virkeligheten ved hjelp av entiteter og relasjoner, og hvordan normalisering bidrar til å fjerne dataredundans. Sentrale konsepter som primærnøkler, fremmednøkler og dataintegritet har gått fra å være teoretiske begreper til praktiske verktøy jeg bruker for å sikre at data henger logisk sammen.
 
 **Hvordan har denne oppgaven bidratt til å oppnå læringsmålene:**
 
-[Denne oppgaven har vært avgjørende for å koble teori til praksis i tråd med emnets læringsmål:
+Denne oppgaven har vært avgjørende for å koble teori til praksis i tråd med emnets læringsmål:
 
 Installasjon og oppsett: Ved å bruke Docker og docker-compose har jeg lært å sette opp et profesjonelt utviklingsmiljø for PostgreSQL.
-
 SQL-ferdigheter: Jeg har praktisert DDL (Data Definition Language) for å bygge tabellstruktur og DML (Data Manipulation Language) for å manipulere testdata.
-
 Sikkerhet og tilgang: Oppgaven med roller og rettigheter har gitt innsikt i hvordan man sikrer data mot uautorisert tilgang, som er et kritisk læringsmål innen databaseadministrasjon.
+Analyse: Gjennom beregning av lagringskapasitet og diskusjon om indeksering har jeg lært å vurdere databasens ytelse og ressursbruk.
 
-Analyse: Gjennom beregning av lagringskapasitet og diskusjon om indeksering har jeg lært å vurdere databasens ytelse og ressursbruk.]
+--
 
 Se oversikt over læringsmålene i en PDF-fil i Canvas https://oslomet.instructure.com/courses/33293/files/folder/Plan%20v%C3%A5ren%202026?preview=4370886
 
 **Hva var mest utfordrende:**
 
-[Det mest utfordrende var feilsøking i initialiseringsskriptet. Å forstå hvorfor en Foreign Key Constraint-feil oppstod under datainnsetting krevde en nøye gjennomgang av rekkefølgen tabellene ble opprettet og populert på. Det var også krevende, men lærerikt, å sette opp Docker-miljøet slik at SQL-skriptet ble kjørt automatisk ved oppstart av containeren, spesielt når små syntaksfeil i SQL-koden førte til at hele containeren stoppet.]
+Det mest utfordrende var feilsøking i initialiseringsskriptet. Å forstå hvorfor en Foreign Key Constraint-feil oppstod under datainnsetting krevde en nøye gjennomgang av rekkefølgen tabellene ble opprettet og populert på. Det var også krevende, men lærerikt, å sette opp Docker-miljøet slik at SQL-skriptet ble kjørt automatisk ved oppstart av containeren, spesielt når små syntaksfeil i SQL-koden førte til at hele containeren stoppet.
 
 **Hva har du lært om databasedesign:**
 
-[Jeg har lært at et godt databasedesign starter lenge før man skriver den første linjen med SQL. Prosessen med å dele opp informasjon i logiske tabeller som kunde, stasjon og sykkel viser hvor viktig det er med en ryddig struktur for å unngå oppdateringsanomalier. Jeg har også sett at designvalg, som valg av datatyper (f.eks. BIGSERIAL vs TEXT), har direkte innvirkning på både lagringsplass og ytelse når systemet skal skaleres opp til tusenvis av utleier.]
+Jeg har lært at et godt databasedesign starter lenge før man skriver den første linjen med SQL. Prosessen med å dele opp informasjon i logiske tabeller som kunde, stasjon og sykkel viser hvor viktig det er med en ryddig struktur for å unngå oppdateringsanomalier. Jeg har også sett at designvalg, som valg av datatyper (f.eks. BIGSERIAL vs TEXT), har direkte innvirkning på både lagringsplass og ytelse når systemet skal skaleres opp til tusenvis av utleier.
 
 ---
+
+
+
+
 
 ## Del 5: SQL-spørringer og Automatisk Testing
 
 **Plassering av SQL-spørringer:**
 
-[Bekreft at du har lagt SQL-spørringene i `test-scripts/queries.sql`] 
+check 
 
 
 **Eventuelle feil og rettelser:**
 
 [Feil 1: Brudd på fremmednøkkel-begrensninger (Foreign Key Violation)
 
-Beskrivelse: Under innsetting av testdata i utleie-tabellen, forsøkte skriptet å referere til en sykkel_id (f.eks. id 39) som ennå ikke eksisterte i sykkel-tabellen. Dette skjedde fordi det kun ble generert 20 sykler, mens utleie-generatoren prøvde å velge tilfeldige tall opp til 100.
+Under innsetting av testdata i Utleie-tabellen forsøkte skriptet å referere til en sykkel_id (for eksempel id 39) som ikke eksisterte i Sykkel-tabellen, fordi det opprinnelig kun ble generert 20 sykler, mens utleie-generatoren tilfeldig valgte tall opptil 100. Problemet ble løst ved å øke antall rader som ble satt inn i Sykkel-tabellen til 100, slik at alle referanser i Utleie fikk en gyldig motpart.
 
-Rettelse: Jeg oppjusterte antallet rader som ble satt inn i sykkel-tabellen til 100, slik at alle referanser i utleie fant en gyldig motpart.
 
 Feil 2: Syntaksfeil i SQL-skriptet
 
-Beskrivelse: En UPDATE-setning ble feilaktig formatert slik at den startet direkte med et FROM-uttrykk uten den nødvendige kommandoen foran. Dette førte til at PostgreSQL avbrøt kjøringen av hele initialiseringsskriptet.
-
-Rettelse: Jeg forenklet logikken ved å fjerne den komplekse UPDATE-setningen og erstattet den med direkte INSERT-setninger som koblet sykler til låser på en mer stabil måte.
+En UPDATE-setning i initialiseringsskriptet var feilaktig formatert og startet direkte med et FROM-uttrykk uten den nødvendige kommandoen foran, noe som gjorde at PostgreSQL avbrøt kjøringen av hele skriptet. Problemet ble løst ved å forenkle logikken: den komplekse UPDATE-setningen ble fjernet og erstattet med direkte INSERT-setninger som koblet sykler til låser på en mer stabil og sikker måte.
 
 Feil 3: Skrivefeil i kolonnenavn (Typo)
 
-Beskrivelse: I en INSERT INTO-setning ble kolonnenavnet skrevet som staasjon_id med to a-er, mens tabellen var definert med stasjon_id.
+I en INSERT INTO-setning ble kolonnenavnet skrevet som staasjon_id med to a-er, mens tabellen var definert med stasjon_id. Problemet ble løst ved å rette skrivefeilen i SQL-filen, slik at kolonnenavnet nå samsvarer med tabell-definisjonen.
 
-Rettelse: Rettet skrivefeilen i SQL-filen slik at den samsvarte med tabell-definisjonen.
 
 Feil 4: Problemer med gjenbruk av containere i Docker
 
-Beskrivelse: Etter å ha rettet feil i SQL-filen, ble ikke endringene synlige i databasen fordi Docker gjenbrukte det gamle "volumet" (lagringen) fra forrige forsøk.
-
-Rettelse: Jeg lærte at jeg måtte bruke kommandoen docker-compose down -v for å slette de gamle volumene helt før jeg startet opp på nytt med up -d.]
+Etter å ha rettet feil i SQL-filen ble ikke endringene synlige i databasen, fordi Docker gjenbrukte det gamle volumet fra forrige oppstart. Problemet ble løst ved å bruke kommandoen docker-compose down -v for å slette de gamle volumene helt, før jeg startet opp på nytt med docker-compose up -d.
 
 ---
+
+
+
+
+
+
+
 
 ## Del 6: Bonusoppgaver (Valgfri)
 
