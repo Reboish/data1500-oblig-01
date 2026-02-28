@@ -166,7 +166,9 @@ Modellen tilfredsstiller 3NF fordi ingen ikke-nøkkelattributter er transitivt a
 
 **Dokumentasjon av vellykket kjøring:**
 
-[Skriv ditt svar her - f.eks. skjermbilder eller output fra terminalen som viser at databasen ble opprettet uten feil]
+<img width="515" height="191" alt="image" src="https://github.com/user-attachments/assets/d670b74d-6e52-4469-99b6-f77d7c343825" />
+<img width="515" height="191" alt="image" src="https://github.com/user-attachments/assets/d670b74d-6e52-4469-99b6-f77d7c343825" />
+
 
 **Spørring mot systemkatalogen:**
 
@@ -180,8 +182,14 @@ ORDER BY table_name;
 
 **Resultat:**
 
-```
-[Skriv resultatet av spørringen her - list opp alle tabellene som ble opprettet]
+table_name 
+------------
+ kunde
+ laas
+ stasjon
+ sykkel
+ utleie
+(5 rows)```
 ```
 
 ---
@@ -192,20 +200,28 @@ ORDER BY table_name;
 
 **SQL for å opprette rolle:**
 
-```sql
-[Skriv din SQL-kode for å opprette rollen 'kunde' her]
-```
+[CREATE ROLE kunde;]
 
 **SQL for å opprette bruker:**
 
 ```sql
-[Skriv din SQL-kode for å opprette brukeren 'kunde_1' her]
+[CREATE USER kunde_1 WITH PASSWORD 'kunde123';
+GRANT kunde TO kunde_1;]
 ```
 
 **SQL for å tildele rettigheter:**
 
 ```sql
-[Skriv din SQL-kode for å tildele rettigheter til rollen her]
+[-- Gir rollen tilgang til å koble seg til databasen og bruke public-skjemaet
+GRANT CONNECT ON DATABASE oblig01 TO kunde;
+GRANT USAGE ON SCHEMA public TO kunde;
+
+-- Gir lesetilgang (SELECT) til stasjonsdata
+GRANT SELECT ON stasjon, laas, sykkel TO kunde;
+
+-- Gir både lese- og skrivetilgang (SELECT, INSERT) til kunde- og utleiedata
+-- Dette lar kunden registrere seg og starte en leieperiode
+GRANT SELECT, INSERT ON kunde, utleie TO kunde;]
 ```
 
 ---
@@ -215,12 +231,16 @@ ORDER BY table_name;
 **SQL for VIEW:**
 
 ```sql
-[Skriv din SQL-kode for VIEW her]
+[CREATE VIEW kunde_egne_utleier AS
+SELECT u.*
+FROM utleie u
+JOIN kunde k ON u.kunde_id = k.kunde_id
+WHERE k.epost = CURRENT_USER; -- Antar at brukernavnet i DB matcher e-posten]
 ```
 
 **Ulempe med VIEW vs. POLICIES:**
 
-[Skriv ditt svar her - diskuter minst én ulempe med å bruke VIEW for autorisasjon sammenlignet med POLICIES]
+"En ulempe med VIEW er at det er lett å omgå hvis brukeren får direkte tilgang til den underliggende tabellen. Med POLICY er sikkerheten innebygd i selve tabellen, slik at filteret alltid gjelder uansett hvilken spørring eller visning som brukes.
 
 ---
 
@@ -236,15 +256,17 @@ ORDER BY table_name;
 
 **Totalt antall utleier per år:**
 
-[Skriv din utregning her]
+[Vi deler året inn i de tre gitte sesongene:Høysesong (5 mnd: mai–sept): $20\,000 \times 5 = 100\,000$ utleierMellomsesong (4 mnd: mars, april, okt, nov): $5\,000 \times 4 = 20\,000$ utleierLavsesong (3 mnd: des–feb): $500 \times 3 = 1\,500$ utleierTotalt antall utleier per år: $121\,500$ utleier]
 
 **Estimat for lagringskapasitet:**
 
-[Skriv din utregning her - vis hvordan du har beregnet lagringskapasiteten for hver tabell]
+[For å beregne lagringskapasiteten ser vi på tabellen som vokser mest, nemlig utleie. De andre tabellene (stasjon, kunde, sykkel) er små og relativt statiske, så de vil utgjøre under 1 MB totalt.]
+
+Beregning per rad i utleie-tabellen:Hver rad består av følgende datatyper (standard PostgreSQL-størrelser):utleie_id (BIGINT): 8 byteskunde_id (BIGINT): 8 bytessykkel_id (BIGINT): 8 bytesutlevert_tid (TIMESTAMPTZ): 8 bytesinnlevert_tid (TIMESTAMPTZ): 8 bytesleiebelop (NUMERIC): ca. 10 bytesfra_laas_id (BIGINT): 8 bytestil_laas_id (BIGINT): 8 bytesRådata totalt per rad: 66 bytesI tillegg kommer:PostgreSQL overhead: Ca. 24 bytes per rad (row header).Indekser: Vi har opprettet 4 indekser på denne tabellen. Vi beregner ca. 25% ekstra plass for disse.Total størrelse per rad: $(66 + 24) \times 1,25 \approx \mathbf{113 \text{ bytes per rad}}$.
 
 **Totalt for første år:**
 
-[Skriv ditt estimat her]
+[Vi multipliserer antall utleier med estimert størrelse per rad:$121\,500 \text{ utleier} \times 113 \text{ bytes} \approx 13\,729\,500 \text{ bytes}$Dette tilsvarer ca. $13,7 \text{ MB}$.Estimat:Inkludert faste data for stasjoner, sykler og kunder, samt litt buffer for loggfiler og systemtabeller, estimeres den nødvendige lagringskapasiteten for det første driftsåret til å være ca. 15–20 MB.]
 
 ---
 
@@ -254,31 +276,45 @@ ORDER BY table_name;
 
 **Problem 1: Redundans**
 
-[Skriv ditt svar her - gi konkrete eksempler fra CSV-filen som viser redundans]
+[Redundans betyr at de samme dataene lagres flere ganger, noe som kaster bort plass.
+
+Eksempel: Informasjonen om "Ole Hansen" (fornavn, etternavn, mobilnr, epost) lagres i sin helhet på rad 2, 3 og 8.
+
+Eksempel: Navn og adresse til "Sentrum Stasjon" gjentas hver eneste gang noen starter eller slutter der, for eksempel på rad 2, 7 og 11.]
 
 **Problem 2: Inkonsistens**
 
-[Skriv ditt svar her - forklar hvordan redundans kan føre til inkonsistens med eksempler]
+[Inkonsistens oppstår når de samme dataene lagres flere steder, men ikke lenger er like.
+
+Eksempel: Hvis Kari Olsen (rad 4, 5 og 10) bytter telefonnummer, må vi huske å oppdatere det på alle rader. Hvis vi glemmer rad 10, vil databasen gi to ulike svar på hva nummeret hennes er.
+
+Eksempel: En skrivefeil i adressen "Karl Johans gate 1 Oslo" på bare én av radene vil føre til at spørringer etter stasjonen feiler for den spesifikke utleien.]
 
 **Problem 3: Oppdateringsanomalier**
 
-[Skriv ditt svar her - diskuter slette-, innsettings- og oppdateringsanomalier]
+[Dette handler om problemer når vi skal endre data:
+
+Sletteanomali: Hvis vi sletter den eneste utleien til Erik Larsen (rad 9), sletter vi samtidig all informasjon om at Erik Larsen i det hele tatt eksisterer som kunde.
+
+Innsettingsanomali: Vi kan ikke registrere en ny stasjon i systemet før noen faktisk har leid en sykkel derfra, fordi stasjonsinfoen er låst til en utleie-rad.
+
+Oppdateringsanomali: Som nevnt under inkonsistens; én endring krever oppdatering av mange rader, noe som øker risikoen for feil.]
 
 **Fordeler med en indeks:**
 
-[Skriv ditt svar her - forklar hvorfor en indeks ville gjort spørringen mer effektiv]
+[Uten indeks må databasen utføre en Sequential Scan ($O(N)$). Det betyr at den må lese hver eneste rad fra start til slutt for å finne f.eks. alle utleier for "City Bike Pro". Med en indeks lager vi en "snarvei" (typisk $O(\log N)$) som peker direkte til radene.]
 
 **Case 1: Indeks passer i RAM**
 
-[Skriv ditt svar her - forklar hvordan indeksen fungerer når den passer i minnet]
+[Når indeksen får plass i arbeidsminnet (RAM), kan databasen finne riktig peker lynraskt uten å røre den trege harddisken. Den slår opp i en søkestruktur (som et tre), finner adressen til raden på disken, og går direkte dit for å hente resten av dataene.]
 
 **Case 2: Indeks passer ikke i RAM**
 
-[Skriv ditt svar her - forklar hvordan flettesortering kan brukes]
+[Hvis datasettet er enormt (mange millioner rader), må indeksen lagres på disk. For å sortere eller søke i disse dataene effektivt brukes ofte flettesortering (external merge sort). Man sorterer små biter i RAM, skriver dem til disk, og "fletter" dem sammen til en ferdig sortert struktur som minimerer antall ganger vi må lese fra disken.]
 
 **Datastrukturer i DBMS:**
 
-[Skriv ditt svar her - diskuter B+-tre og hash-indekser]
+[B+-tre: Den vanligste strukturen. Den er suveren fordi den er balansert (lik søketid for alle verdier) og støtter områdesøk (f.eks. "finn alle utleier mellom juni og august"). Dataene ligger i "løvnodene" nederst, noe som gjør sekvensiell lesing veldig effektiv.Hash-indeks: Ekstremt rask for eksakte oppslag ($O(1)$), som "finn kunde med epost X". Ulempen er at den er ubrukelig til sortering eller områdesøk (den forstår ikke at "A" kommer før "B").]
 
 ---
 
@@ -286,17 +322,17 @@ ORDER BY table_name;
 
 **Foreslått datastruktur:**
 
-[Skriv ditt svar her - f.eks. heap-fil, LSM-tree, eller annen egnet datastruktur]
+[LSM-tree (Log-Structured Merge-tree) eller en enkel Heap-fil.]
 
-**Begrunnelse:**
+**Begrunnelse:**Logging er en typisk "append-only"-operasjon. Det betyr at vi bare legger til nye hendelser i slutten av en fil eller struktur, og vi endrer eller sletter nesten aldri gamle logginnslag. For en slik arbeidsmengde er strukturer som B-trær (som PostgreSQL bruker for vanlige indekser) dårlig egnet, fordi de krever mye "vedlikehold" og flytting av data for å holde treet balansert hver gang noe settes inn.
 
 **Skrive-operasjoner:**
 
-[Skriv ditt svar her - forklar hvorfor datastrukturen er egnet for mange skrive-operasjoner]
+[LSM-trær og heap-filer er ekstremt effektive for skriving fordi de benytter seg av sekvensiell I/O.I en heap-fil skriver man bare dataene rett i slutten av fila ($O(1)$ tidskompleksitet).I et LSM-tre samles skriveoperasjoner opp i en buffer i minnet (RAM) og skrives ned til disk i store blokker som sorterte filer.Dette er mye raskere enn "random I/O", hvor skrivehodet på en tradisjonell harddisk må hoppe rundt for å finne riktig plass, eller hvor SSD-kontrolleren må utføre mange små skriveoperasjoner. Dette sikrer at loggingen ikke blir en flaskehals for resten av databasen.]
 
 **Lese-operasjoner:**
 
-[Skriv ditt svar her - forklar hvordan datastrukturen håndterer sjeldne lese-operasjoner]
+[I et loggsystem er leseoperasjoner sjeldne. Vi leser vanligvis bare logger når noe har gått galt (feilsøking) eller ved en sikkerhetsrevisjon.I en enkel heap-fil er lesing tregt fordi man må skanne hele fila ($O(N)$) for å finne det man leter etter.Et LSM-tre er bedre her, da det holder dataene delvis sortert, noe som gjør tidsbaserte søk (f.eks. "hva skjedde mellom kl. 12:00 og 13:00?") mer effektive.Siden vi leser så sjelden, er det et fornuftig bytte å ofre lesehastighet for å få maksimal skrivehastighet.]
 
 ---
 
@@ -304,23 +340,36 @@ ORDER BY table_name;
 
 **Hvor bør validering gjøres:**
 
-[Skriv ditt svar her - argumenter for validering i ett eller flere lag]
+[Validering bør gjøres i alle lagene (nettleser, applikasjonslag og database). Dette kalles en lagdelt sikkerhetsstrategi. Hvert lag har sitt eget formål: nettleseren for brukervennlighet, applikasjonslaget for sikkerhet og forretningslogikk, og databasen som den ultimate garantisten for dataintegritet.]
 
 **Validering i nettleseren:**
 
-[Skriv ditt svar her - diskuter fordeler og ulemper]
+[Fordeler: Gir umiddelbar tilbakemelding til brukeren (f.eks. en rød ramme rundt et felt før man trykker "send"). Dette gir en mye bedre brukeropplevelse (UX) fordi man slipper å vente på et svar fra serveren for enkle feil som manglende @ i en e-post.
+
+Ulemper: Det er totalt usikkert. En teknisk kyndig person kan enkelt skru av JavaScript i nettleseren eller sende data rett til serveren via verktøy som Postman eller curl, og dermed hoppe over hele valideringen.]
 
 **Validering i applikasjonslaget:**
 
-[Skriv ditt svar her - diskuter fordeler og ulemper]
+[Fordeler: Dette er "hjernen" i systemet. Her kan vi utføre kompleks forretningslogikk som databasen kanskje ikke vet om (f.eks. sjekke om en bruker er gammel nok via et eksternt API). Det er her vi stopper ondsinnede angrep (som SQL Injection) før de når databasen.
+
+Ulemper: Hvis noen ved en feil skriver et nytt script som snakker direkte med databasen (forbi applikasjonslaget), kan de fortsatt putte "søppel" inn i systemet hvis ikke databasen selv sier stopp.]
 
 **Validering i databasen:**
 
-[Skriv ditt svar her - diskuter fordeler og ulemper]
+[Fordeler: Dette er den siste skansen. Ved å bruke constraints som NOT NULL, UNIQUE, CHECK og FOREIGN KEY (slik du gjorde i Oppgave 2.2), garanterer du at dataene er konsistente uansett hvordan de kom inn. Selv om en bug i Java-koden slipper gjennom en negativ pris, vil databasen nekte å lagre den.
+
+Ulemper: Feilmeldinger fra databasen er ofte tekniske og lite brukervennlige for en vanlig person. Det er også mer "dyrt" i form av ressurser å oppdage en feil her, siden dataene allerede har reist gjennom hele nettverket.]
 
 **Konklusjon:**
 
-[Skriv ditt svar her - oppsummer hvor validering bør gjøres og hvorfor]
+[Vi validerer i alle lag for å kombinere det beste fra alle verdener:
+
+Nettleser: For hastighet og brukervennlighet.
+
+Applikasjonslag: For sikkerhet og kompleks logikk.
+
+Database: For absolutt integritet og varig datakvalitet.
+Uten validering i alle ledd risikerer man enten et system som er frustrerende å bruke, eller et system med "skitne" data som før eller siden vil krasje applikasjonen.]
 
 ---
 
@@ -328,21 +377,29 @@ ORDER BY table_name;
 
 **Hva har du lært så langt i emnet:**
 
-[Skriv din refleksjon her - diskuter sentrale konsepter du har lært]
+[Gjennom de første ukene har jeg fått en dypere forståelse for forskjellen på ustrukturerte data (flate filer) og relasjonelle databaser. Jeg har lært hvordan man modellerer virkeligheten ved hjelp av entiteter og relasjoner, og hvordan normalisering bidrar til å fjerne dataredundans. Sentrale konsepter som primærnøkler, fremmednøkler og dataintegritet har gått fra å være teoretiske begreper til praktiske verktøy jeg bruker for å sikre at data henger logisk sammen.]
 
 **Hvordan har denne oppgaven bidratt til å oppnå læringsmålene:**
 
-[Skriv din refleksjon her - koble oppgaven til læringsmålene i emnet]
+[Denne oppgaven har vært avgjørende for å koble teori til praksis i tråd med emnets læringsmål:
+
+Installasjon og oppsett: Ved å bruke Docker og docker-compose har jeg lært å sette opp et profesjonelt utviklingsmiljø for PostgreSQL.
+
+SQL-ferdigheter: Jeg har praktisert DDL (Data Definition Language) for å bygge tabellstruktur og DML (Data Manipulation Language) for å manipulere testdata.
+
+Sikkerhet og tilgang: Oppgaven med roller og rettigheter har gitt innsikt i hvordan man sikrer data mot uautorisert tilgang, som er et kritisk læringsmål innen databaseadministrasjon.
+
+Analyse: Gjennom beregning av lagringskapasitet og diskusjon om indeksering har jeg lært å vurdere databasens ytelse og ressursbruk.]
 
 Se oversikt over læringsmålene i en PDF-fil i Canvas https://oslomet.instructure.com/courses/33293/files/folder/Plan%20v%C3%A5ren%202026?preview=4370886
 
 **Hva var mest utfordrende:**
 
-[Skriv din refleksjon her - diskuter hvilke deler av oppgaven som var mest krevende]
+[Det mest utfordrende var feilsøking i initialiseringsskriptet. Å forstå hvorfor en Foreign Key Constraint-feil oppstod under datainnsetting krevde en nøye gjennomgang av rekkefølgen tabellene ble opprettet og populert på. Det var også krevende, men lærerikt, å sette opp Docker-miljøet slik at SQL-skriptet ble kjørt automatisk ved oppstart av containeren, spesielt når små syntaksfeil i SQL-koden førte til at hele containeren stoppet.]
 
 **Hva har du lært om databasedesign:**
 
-[Skriv din refleksjon her - reflekter over prosessen med å designe en database fra bunnen av]
+[Jeg har lært at et godt databasedesign starter lenge før man skriver den første linjen med SQL. Prosessen med å dele opp informasjon i logiske tabeller som kunde, stasjon og sykkel viser hvor viktig det er med en ryddig struktur for å unngå oppdateringsanomalier. Jeg har også sett at designvalg, som valg av datatyper (f.eks. BIGSERIAL vs TEXT), har direkte innvirkning på både lagringsplass og ytelse når systemet skal skaleres opp til tusenvis av utleier.]
 
 ---
 
@@ -350,12 +407,34 @@ Se oversikt over læringsmålene i en PDF-fil i Canvas https://oslomet.instructu
 
 **Plassering av SQL-spørringer:**
 
-[Bekreft at du har lagt SQL-spørringene i `test-scripts/queries.sql`]
+[Bekreft at du har lagt SQL-spørringene i `test-scripts/queries.sql`] 
 
 
 **Eventuelle feil og rettelser:**
 
-[Skriv ditt svar her - hvis noen tester feilet, forklar hva som var feil og hvordan du rettet det]
+[Feil 1: Brudd på fremmednøkkel-begrensninger (Foreign Key Violation)
+
+Beskrivelse: Under innsetting av testdata i utleie-tabellen, forsøkte skriptet å referere til en sykkel_id (f.eks. id 39) som ennå ikke eksisterte i sykkel-tabellen. Dette skjedde fordi det kun ble generert 20 sykler, mens utleie-generatoren prøvde å velge tilfeldige tall opp til 100.
+
+Rettelse: Jeg oppjusterte antallet rader som ble satt inn i sykkel-tabellen til 100, slik at alle referanser i utleie fant en gyldig motpart.
+
+Feil 2: Syntaksfeil i SQL-skriptet
+
+Beskrivelse: En UPDATE-setning ble feilaktig formatert slik at den startet direkte med et FROM-uttrykk uten den nødvendige kommandoen foran. Dette førte til at PostgreSQL avbrøt kjøringen av hele initialiseringsskriptet.
+
+Rettelse: Jeg forenklet logikken ved å fjerne den komplekse UPDATE-setningen og erstattet den med direkte INSERT-setninger som koblet sykler til låser på en mer stabil måte.
+
+Feil 3: Skrivefeil i kolonnenavn (Typo)
+
+Beskrivelse: I en INSERT INTO-setning ble kolonnenavnet skrevet som staasjon_id med to a-er, mens tabellen var definert med stasjon_id.
+
+Rettelse: Rettet skrivefeilen i SQL-filen slik at den samsvarte med tabell-definisjonen.
+
+Feil 4: Problemer med gjenbruk av containere i Docker
+
+Beskrivelse: Etter å ha rettet feil i SQL-filen, ble ikke endringene synlige i databasen fordi Docker gjenbrukte det gamle "volumet" (lagringen) fra forrige forsøk.
+
+Rettelse: Jeg lærte at jeg måtte bruke kommandoen docker-compose down -v for å slette de gamle volumene helt før jeg startet opp på nytt med up -d.]
 
 ---
 
