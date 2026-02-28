@@ -364,28 +364,20 @@ Når vi inkluderer faste data for stasjoner, sykler og kunder, samt legger inn l
 
 **Problem 1: Redundans**
 
-[Redundans betyr at de samme dataene lagres flere ganger, noe som kaster bort plass.
-
-Eksempel: Informasjonen om "Ole Hansen" (fornavn, etternavn, mobilnr, epost) lagres i sin helhet på rad 2, 3 og 8.
-
-Eksempel: Navn og adresse til "Sentrum Stasjon" gjentas hver eneste gang noen starter eller slutter der, for eksempel på rad 2, 7 og 11.]
+[Redundans innebærer at de samme dataene lagres flere ganger, noe som kaster bort lagringsplass og kan føre til inkonsistens. Feks lagres informasjon om Ole Hansen, fornavn, etternavn, mobilnummer og e-post, på rad 2, 3 og 8. På samme måte gjentas navn og adresse til Sentrum Stasjon hver gang noen starter eller avslutter en utleie der, for eksempel på rad 2, 7 og 11.]
 
 
 
 
 **Problem 2: Inkonsistens**
 
-[Inkonsistens oppstår når de samme dataene lagres flere steder, men ikke lenger er like.
-
-Eksempel: Hvis Kari Olsen (rad 4, 5 og 10) bytter telefonnummer, må vi huske å oppdatere det på alle rader. Hvis vi glemmer rad 10, vil databasen gi to ulike svar på hva nummeret hennes er.
-
-Eksempel: En skrivefeil i adressen "Karl Johans gate 1 Oslo" på bare én av radene vil føre til at spørringer etter stasjonen feiler for den spesifikke utleien.]
+[Inkonsistens oppstår når de samme dataene lagres flere steder, men ikke lenger er like. Feks, hvis Kari Olsen (rad 4, 5 og 10) bytter telefonnummer, må oppdateringen gjøres på alle rader; hvis vi glemmer rad 10, vil databasen gi ulike svar på hva nummeret hennes er. På samme måte kan en skrivefeil i adressen Karl Johans gate 1 Oslo på bare én rad føre til at spørringer etter stasjonen feiler for den spesifikke utleien.]
 
 
 
 **Problem 3: Oppdateringsanomalier**
 
-[Datamodellen kan føre til flere typer anomalier når vi endrer data. En sletteanomali oppstår dersom vi sletter den eneste utleien til Erik Larsen, da vi samtidig fjerner all informasjon om at han eksisterer som kunde. En innsettingsanomali kan skje fordi vi ikke kan registrere en ny stasjon i systemet før noen faktisk har leid en sykkel derfra, siden stasjonsinformasjon er bundet til en utleie-rad. Til slutt kan det oppstå en oppdateringsanomali, hvor én endring krever at mange rader oppdateres samtidig, noe som øker risikoen for feil og inkonsistens i databasen.
+[Datamodellen kan føre til ulike typer anomalier ved endringer i data. En sletteanomali oppstår dersom vi sletter den eneste utleien til Erik Larsen, fordi all informasjon om ham som kunde da også fjernes. En innsettingsanomali kan oppstå når vi ikke kan registrere en ny stasjon før noen faktisk har leid en sykkel derfra, ettersom stasjonsinformasjon er bundet til utleie rader Til slutt kan en oppdateringsanomali oppstå når én endring krever oppdatering av mange rader samtidig, noe som øker risikoen for feil og inkonsistens i databasen.
 
 
 
@@ -393,19 +385,19 @@ Eksempel: En skrivefeil i adressen "Karl Johans gate 1 Oslo" på bare én av rad
 
 **Fordeler med en indeks:**
 
-[Uten indeks må databasen utføre en Sequential Scan ($O(N)$). Det betyr at den må lese hver eneste rad fra start til slutt for å finne f.eks. alle utleier for "City Bike Pro". Med en indeks lager vi en "snarvei" (typisk $O(\log N)$) som peker direkte til radene.]
+[Hvis man ikke hadde en indeks måtte databasen utføre en Sequential Scan. Det betyr at den må lese hver eneste rad fra start til slutt for å finne feks. alle utleier for City Bike Pro. Med en indeks lager vi en snarvei som peker direkte til radene.]
 
 **Case 1: Indeks passer i RAM**
 
-[Når indeksen får plass i arbeidsminnet (RAM), kan databasen finne riktig peker lynraskt uten å røre den trege harddisken. Den slår opp i en søkestruktur (som et tre), finner adressen til raden på disken, og går direkte dit for å hente resten av dataene.]
+[Når indeksen får plass i arbeidsminnet (RAM), kan databasen finne riktig peker lynraskt uten å røre den trege harddisken. Den slår opp i en søkestruktur altså som et tre, finner adressen til raden på disken, og går direkte dit for å hente resten av dataene.]
 
 **Case 2: Indeks passer ikke i RAM**
 
-[Hvis datasettet er enormt (mange millioner rader), må indeksen lagres på disk. For å sortere eller søke i disse dataene effektivt brukes ofte flettesortering (external merge sort). Man sorterer små biter i RAM, skriver dem til disk, og "fletter" dem sammen til en ferdig sortert struktur som minimerer antall ganger vi må lese fra disken.]
+[Hvis datasettet er enormt, at den ermange millioner rader, må indeksen lagres på disk. For å sortere eller søke i disse dataene effektivt brukes ofte flettesortering (external merge sort). Man sorterer små biter i RAM, skriver dem til disk, og fletter dem sammen til en ferdig sortert struktur som minimerer antall ganger vi må lese fra disken.]
 
 **Datastrukturer i DBMS:**
 
-[B+-tre: Den vanligste strukturen. Den er suveren fordi den er balansert (lik søketid for alle verdier) og støtter områdesøk (f.eks. "finn alle utleier mellom juni og august"). Dataene ligger i "løvnodene" nederst, noe som gjør sekvensiell lesing veldig effektiv.Hash-indeks: Ekstremt rask for eksakte oppslag ($O(1)$), som "finn kunde med epost X". Ulempen er at den er ubrukelig til sortering eller områdesøk (den forstår ikke at "A" kommer før "B").]
+[En B+-tre-indeks er den vanligste strukturen og er svært effektiv fordi den er balansert, noe som gir lik søketid for alle verdier, samtidig som den støtter områdesøk, for eksempel «finn alle utleier mellom juni og august». Dataene lagres i løvnodene nederst, noe som gjør sekvensiell lesing veldig effektiv. En hash-indeks gir derimot ekstremt raske eksakte oppslag, for eksempel «finn kunde med epost X», men den kan ikke brukes til sortering eller områdesøk, siden den ikke har informasjon om rekkefølgen på verdiene.]
 
 ---
 
