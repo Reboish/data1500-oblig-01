@@ -18,11 +18,11 @@ Kunde, stasjon, sykkel, utleie, lås.
 
 **Attributter for hver entitet:**
 
-Kunde: kunde_id (PK), mobilnummer, epost, fornavn, etternavn.
-Stasjon: stasjon_id (PK), navn, address.
-Sykkel: sykkel_id (PK), laas_id (FK).
-Utleie: utleie_id (PK), kunde_id (PK), sykkel_id (PK), utlevert_tid, innlevert_tid, leiebelop.
-lås: laas_id (PK), stasjon_id (FK).
+Kunde: kunde_id, mobilnummer, epost, fornavn, etternavn.
+Stasjon: stasjon_id, navn, address.
+Sykkel: sykkel_id, laas_id.
+Utleie: utleie_id, kunde_id, sykkel_id, utlevert_tid, innlevert_tid, leiebelop.
+lås: laas_id, stasjon_id.
 
 
 ---
@@ -40,10 +40,67 @@ Lås: laas_id - BIGINT, stasjon_id - BIGINT
 
 **`CHECK`-constraints:**
 
-Det er lagt inn CHECK-constraints for å sikre dataintegritet i databasen. Mobilnummer er begrenset til et gyldig format (åtte sifre, eventuelt med landskode) for å hindre ugyldige verdier, og epost må følge et enkelt epost-mønster slik at feltet ikke kan fylles med tilfeldig tekst. Fornavn, etternavn, stasjonsnavn og adresse kan ikke være tomme strenger, slik at meningsløse verdier ikke lagres selv om feltet ikke er NULL. I utleie er det lagt en CHECK-constraint som sikrer at innleveringstidspunkt enten er NULL (aktiv utleie) eller senere enn utleveringstidspunkt, for å hindre umulige tidsintervaller. I tillegg er det sikret at leiebeløp ikke kan være negativt, siden negative betalinger ikke gir mening i systemet.
-
+For å sikre at dataene i databasen er korrekte, er det lagt inn flere CHECK-constraints. Mobilnummer må følge et gyldig format altså, åtte sifre, eventuelt med landskode. Slik at ugyldige numre ikke kan registreres. E-postadresser må også følge et enkelt epost mønster, slik at feltet ikke fylles med tilfeldig tekst. Fornavn, etternavn, stasjonsnavn og adresse kan ikke være tomme strenger. Dette hindrer at meningsløse verdier lagres, selv om feltene teknisk sett ikke er NULL. I utleietabellen er det lagt inn en CHECK constraint som sikrer at innleveringstidspunktet enten er NULL (ved aktiv utleie) eller senere enn utleveringstidspunktet. På den måten unngår man umulige tidsintervaller. Det er også sikret at leiebeløpet ikke kan være negativt, siden negative betalinger ikke gir mening i systemet.
 
 **ER-diagram:**
+
+erDiagram
+    KUNDE {
+        BIGINT kunde_id
+        TEXT mobilnummer
+        TEXT epost
+        TEXT fornavn
+        TEXT etternavn
+    }
+
+    STASJON {
+        BIGINT stasjon_id 
+        TEXT navn
+        TEXT adresse
+    }
+
+    LAAS {
+        BIGINT laas_id 
+        BIGINT stasjon_id 
+    }
+
+    SYKKEL {
+        BIGINT sykkel_id 
+        BIGINT laas_id FK "NULL = utleid"
+    }
+
+    UTLEIE {
+        BIGINT utleie_id PK
+        BIGINT kunde_id FK
+        BIGINT sykkel_id FK
+        TIMESTAMPTZ utlevert_tid
+        TIMESTAMPTZ innlevert_tid "NULL = aktiv"
+        NUMERIC leiebelop
+        BIGINT fra_laas_id FK
+        BIGINT til_laas_id FK "NULL til innlevering"
+    }
+
+    STASJON ||--o{ LAAS : har
+    LAAS ||--o{ SYKKEL : kan_ha
+    KUNDE ||--o{ UTLEIE : gjor
+    SYKKEL ||--o{ UTLEIE : brukes_i
+    LAAS ||--o{ UTLEIE : fra
+    LAAS ||--o{ UTLEIE : til
+
+
+---
+
+### Oppgave 1.3: Primærnøkler
+
+**Valgte primærnøkler og begrunnelser:**
+
+For entiteten Kunde er primærnøkkelen valgt som kunde_id (surrogatnøkkel). Selv om mobilnummer og e-post ofte er unike og kunne fungert som naturlige nøkler, kan de endres over tid og er derfor lite egnet som primærnøkkel. I stedet brukes en stabil ID, mens mobilnummer og e-post håndheves som UNIQUE. For Stasjon benyttes stasjon_id som primærnøkkel, siden stasjonsnavn verken er garantert unike eller stabile over tid, for eksempel ved omdøping. For Lås brukes laas_id som surrogatnøkkel, fordi hver lås må kunne identifiseres entydig uavhengig av stasjon og eventuell lokal nummerering. For Sykkel er sykkel_id primærnøkkel; dette er en naturlig nøkkel i caset, ettersom hver sykkel har en unik ID, og den fungerer samtidig som en stabil identifikator. For Utleie er primærnøkkelen utleie_id (surrogatnøkkel), da en naturlig nøkkel basert på for eksempel (kunde_id, sykkel_id, utlevert_tid) ville blitt unødvendig kompleks og mer sårbar for feil og duplikater, mens en enkel ID gjør referanser og oppdateringer enklere og mer robuste.
+
+**Naturlige vs. surrogatnøkler:**
+
+I datamodellen er det hovedsakelig brukt surrogatnøkler, altså kunstige ID-felt, som primærnøkler. For entitetene Kunde, Stasjon, Lås og Utleie er det valgt egne ID-attributter (kunde_id, stasjon_id, laas_id, utleie_id), fordi naturlige kandidater som mobilnummer, e-post eller stasjonsnavn enten kan endre seg over tid eller ikke er garantert unike. Surrogatnøkler gir stabile og enkle referanser mellom tabeller og gjør modellen mer robust ved endringer i forretningsdata. For Sykkel kan sykkel_id regnes som en naturlig nøkkel, siden caset sier at hver sykkel har en unik ID, men den fungerer samtidig som en stabil identifikator på linje med en surrogatnøkkel. Naturlige nøkler som mobilnummer og e-post er derfor ikke brukt som primærnøkler, men kan i stedet håndheves med UNIQUE-constraints.
+
+**Oppdatert ER-diagram:**
 
 erDiagram
     KUNDE {
@@ -88,55 +145,77 @@ erDiagram
     LAAS ||--o{ UTLEIE : fra
     LAAS ||--o{ UTLEIE : til
 
-
----
-
-### Oppgave 1.3: Primærnøkler
-
-**Valgte primærnøkler og begrunnelser:**
-
-Kunde: Primærnøkkel er valgt som kunde_id (surrogatnøkkel). Selv om mobilnummer og epost kan fungere som naturlige nøkler fordi de ofte er unike, kan de endre seg (nytt nummer/epost), og de er derfor dårlig egnet som primærnøkkel. I stedet brukes en stabil ID som PK, mens mobilnummer og epost kan håndheves som UNIQUE. Stasjon: Primærnøkkel er stasjon_id (surrogatnøkkel). Et navn kan være en naturlig nøkkel, men er ikke garantert unikt og kan endres (omdøping), derfor brukes en ID. Lås: Primærnøkkel er laas_id (surrogatnøkkel), siden låser må kunne identifiseres unikt uavhengig av stasjon og eventuelle lokale “nummer” på stasjonen. Sykkel: Primærnøkkel er sykkel_id. Dette er en naturlig nøkkel i caset (“hver sykkel har en unik ID”), og fungerer samtidig som en stabil identifikator. Utleie: Primærnøkkel er utleie_id (surrogatnøkkel), fordi en “naturlig” nøkkel basert på f.eks. (kunde_id, sykkel_id, utlevert_tid) blir unødvendig komplisert og sårbar for feil/duplikater, mens en enkel ID gjør referanser og oppdateringer enklere.
-
-**Naturlige vs. surrogatnøkler:**
-
-I datamodellen er det hovedsakelig brukt **surrogatnøkler**, altså kunstige ID-felt, som primærnøkler. For entitetene Kunde, Stasjon, Lås og Utleie er det valgt egne ID-attributter (`kunde_id`, `stasjon_id`, `laas_id`, `utleie_id`) fordi naturlige kandidater som mobilnummer, epost eller stasjonsnavn kan endre seg over tid eller ikke er garantert unike. Surrogatnøkler gir stabile og enkle referanser mellom tabeller og gjør modellen mer robust mot endringer i forretningsdata. For Sykkel kan `sykkel_id` regnes som en naturlig nøkkel siden caset sier at hver sykkel har en unik ID, men den fungerer også som en stabil identifikator på samme måte som en surrogatnøkkel. Naturlige nøkler som mobilnummer og epost er derfor ikke brukt som primærnøkler, men kan i stedet håndheves med UNIQUE-constraints.
-
-
-**Oppdatert ER-diagram:**
-
-[Legg inn mermaid-kode eller eventuelt en bildefil fra `mermaid.live` her]
-
 ---
 
 ### Oppgave 1.4: Forhold og fremmednøkler
 
 **Identifiserte forhold og kardinalitet:**
 
-**Identifiserte forhold og kardinalitet:** En **stasjon** har **mange låser**, og hver **lås** tilhører **én stasjon** (1–til–mange: `Stasjon (1) → Lås (N)`, implementeres med fremmednøkkelen `laas.stasjon_id`). En **lås** kan ha **0 eller 1 sykkel** parkert, og en **sykkel** kan stå i **0 eller 1 lås** (1–til–1 “valgfri” på begge sider: `Lås (0..1) ↔ Sykkel (0..1)`, implementeres ved at `sykkel.laas_id` er en FK som kan være NULL, og med en UNIQUE-regel på `sykkel.laas_id` for å hindre at flere sykler peker på samme lås). En **kunde** kan ha **mange utleier**, men hver **utleie** tilhører **én kunde** (1–til–mange: `Kunde (1) → Utleie (N)`, implementeres med `utleie.kunde_id`). En **sykkel** kan være brukt i **mange utleier** over tid, men hver **utleie** gjelder **én sykkel** (1–til–mange: `Sykkel (1) → Utleie (N)`, implementeres med `utleie.sykkel_id`). Forholdet mellom **kunde** og **sykkel** er dermed **mange–til–mange** over tid (en kunde kan leie mange sykler, og en sykkel kan leies av mange kunder), og dette er “løst opp” av koblingstabellen/assosiative entiteten **Utleie** (Kunde ↔ Utleie ↔ Sykkel). I tillegg knytter **Utleie** til hvor utleien startet og sluttet: hver **utleie** har **én startlås** og **0 eller 1 sluttlås** (1–til–mange fra Lås til Utleie: `Lås (1) → Utleie (N)` via `utleie.fra_laas_id` og `utleie.til_laas_id`, der `til_laas_id` kan være NULL til innlevering).
+Identifiserte forhold og kardinalitet: En stasjon har mange låser, og hver lås tilhører én stasjon (1–til–mange: Stasjon (1) → Lås (N)), implementert med fremmednøkkelen laas.stasjon_id. En lås kan ha 0 eller 1 sykkel parkert, og en sykkel kan stå i 0 eller 1 lås (valgfri 1–til–1-relasjon på begge sider: Lås (0..1) ↔ Sykkel (0..1)). Dette implementeres ved at sykkel.laas_id er en fremmednøkkel som kan være NULL, kombinert med en UNIQUE-regel på sykkel.laas_id for å hindre at flere sykler peker på samme lås. En kunde kan ha mange utleier, mens hver utleie tilhører én kunde (1–til–mange: Kunde (1) → Utleie (N)), implementert med utleie.kunde_id. En sykkel kan brukes i mange utleier over tid, men hver utleie gjelder én sykkel (1–til–mange: Sykkel (1) → Utleie (N)), implementert med utleie.sykkel_id. Forholdet mellom kunde og sykkel er dermed mange–til–mange over tid, siden en kunde kan leie mange sykler og en sykkel kan leies av mange kunder. Dette løses gjennom den assosiative entiteten Utleie (Kunde ↔ Utleie ↔ Sykkel). I tillegg registrerer Utleie hvor leieforholdet startet og sluttet: hver utleie har én startlås og 0 eller 1 sluttlås. Dette gir en 1–til–mange-relasjon fra Lås til Utleie, implementert via utleie.fra_laas_id og utleie.til_laas_id, der til_laas_id kan være NULL frem til innlevering.
 
 **Fremmednøkler:**
 
-Fremmednøkler brukes for å implementere relasjonene mellom entitetene og sikre referanseintegritet. `laas.stasjon_id` er en fremmednøkkel som peker til `stasjon(stasjon_id)` og implementerer forholdet **Stasjon (1) → Lås (mange)**, siden mange låser kan tilhøre samme stasjon. `sykkel.laas_id` peker til `laas(laas_id)` og viser hvor en sykkel står parkert; feltet kan være NULL når sykkelen er utleid, og sammen med en UNIQUE-regel på `sykkel.laas_id` kan dette sikre at én lås ikke kan ha flere sykler samtidig (valgfritt 1–1). `utleie.kunde_id` peker til `kunde(kunde_id)` og implementerer forholdet **Kunde (1) → Utleie (mange)**, fordi hver utleie må tilhøre én bestemt kunde. `utleie.sykkel_id` peker til `sykkel(sykkel_id)` og implementerer forholdet **Sykkel (1) → Utleie (mange)**, siden en sykkel kan inngå i mange utleier over tid, men hver utleie gjelder én sykkel. I tillegg peker `utleie.fra_laas_id` til `laas(laas_id)` og lagrer hvilken lås sykkelen ble hentet fra, mens `utleie.til_laas_id` peker til `laas(laas_id)` og lagrer hvilken lås sykkelen ble levert til (kan være NULL til innlevering); disse to fremmednøklene implementerer at hver utleie har **én startlås** og **0 eller 1 sluttlås**, og at en lås kan være brukt som start/slutt i mange utleier over tid.
+Fremmednøkler brukes for å implementere relasjonene mellom entitetene og sikre referanseintegritet. laas.stasjon_id er en fremmednøkkel som peker til stasjon(stasjon_id) og implementerer forholdet Stasjon (1) → Lås (mange), siden flere låser kan tilhøre samme stasjon. sykkel.laas_id peker til laas(laas_id) og angir hvor en sykkel er parkert. Feltet kan være NULL når sykkelen er utleid, og sammen med en UNIQUE-regel på sykkel.laas_id sikrer dette at én lås ikke kan ha flere sykler samtidig (valgfri 1–til–1-relasjon). utleie.kunde_id peker til kunde(kunde_id) og implementerer forholdet Kunde (1) → Utleie (mange), ettersom hver utleie må være knyttet til én bestemt kunde. utleie.sykkel_id peker til sykkel(sykkel_id) og implementerer forholdet Sykkel (1) → Utleie (mange), siden en sykkel kan inngå i mange utleier over tid, mens hver utleie gjelder én sykkel. I tillegg peker utleie.fra_laas_id til laas(laas_id) og lagrer hvilken lås sykkelen ble hentet fra, mens utleie.til_laas_id peker til laas(laas_id) og lagrer hvilken lås sykkelen ble levert til (og kan være NULL frem til innlevering). Disse to fremmednøklene implementerer at hver utleie har én startlås og 0 eller 1 sluttlås, samtidig som en lås kan brukes som start- eller sluttlås i mange utleier over tid.
 
 **Oppdatert ER-diagram:**
 
-[Legg inn mermaid-kode eller eventuelt en bildefil fra `mermaid.live` her]
+erDiagram
+    KUNDE {
+        BIGINT kunde_id PK
+        TEXT mobilnummer
+        TEXT epost
+        TEXT fornavn
+        TEXT etternavn
+    }
 
+    STASJON {
+        BIGINT stasjon_id PK
+        TEXT navn
+        TEXT adresse
+    }
+
+    LAAS {
+        BIGINT laas_id PK
+        BIGINT stasjon_id FK
+    }
+
+    SYKKEL {
+        BIGINT sykkel_id PK
+        BIGINT laas_id FK "NULL = utleid"
+    }
+
+    UTLEIE {
+        BIGINT utleie_id PK
+        BIGINT kunde_id FK
+        BIGINT sykkel_id FK
+        TIMESTAMPTZ utlevert_tid
+        TIMESTAMPTZ innlevert_tid "NULL = aktiv"
+        NUMERIC leiebelop
+        BIGINT fra_laas_id FK
+        BIGINT til_laas_id FK "NULL til innlevering"
+    }
+
+    STASJON ||--o{ LAAS : har
+    LAAS ||--o{ SYKKEL : kan_ha
+    KUNDE ||--o{ UTLEIE : gjor
+    SYKKEL ||--o{ UTLEIE : brukes_i
+    LAAS ||--o{ UTLEIE : fra
+    LAAS ||--o{ UTLEIE : til
 ---
 
 ### Oppgave 1.5: Normalisering
 
 **Vurdering av 1. normalform (1NF):**
 
-Datamodellen tilfredsstiller 1NF fordi alle tabeller har klart definerte rader med primærnøkkel, og alle attributter inneholder atomiske verdier (én verdi per felt). Det finnes ingen lister eller gjentatte grupper i samme kolonne, for eksempel lagres kontaktinformasjon (mobilnummer, epost) som egne felter og ikke som samlinger. Relasjoner som “kunde leier sykkel” håndteres gjennom egne rader i Utleie-tabellen i stedet for flere verdier i ett felt.
+Datamodellen tilfredsstiller 1NF fordi alle tabeller har tydelig definerte rader med primærnøkkel, og alle attributter inneholder atomiske verdier, det vil si én verdi per felt. Det finnes ingen lister eller gjentatte grupper i samme kolonne. For eksempel lagres kontaktinformasjon som mobilnummer og e-post i egne felter, ikke som sammensatte eller flerverdige attributter. Relasjoner som «kunde leier sykkel» håndteres gjennom egne rader i tabellen Utleie, i stedet for å lagre flere verdier i ett og samme felt.
 
 **Vurdering av 2. normalform (2NF):**
 
-Modellen tilfredsstiller 2NF fordi alle tabeller enten har en enkel (ikke-sammensatt) primærnøkkel, eller så er alle ikke-nøkkelattributter fullstendig funksjonelt avhengige av hele primærnøkkelen. Siden vi bruker surrogatnøkler (*_id) som primærnøkler i tabellene, oppstår ikke problemet med delvis avhengighet (som typisk skjer når man har sammensatte primærnøkler). For eksempel er alle attributtene i Utleie avhengige av utleie_id, og kundeattributter ligger i Kunde-tabellen, ikke i Utleie.
+Modellen tilfredsstiller 2NF fordi alle tabeller enten har en enkel (ikke-sammensatt) primærnøkkel, eller fordi alle ikke-nøkkelattributter er fullstendig funksjonelt avhengige av hele primærnøkkelen. Siden det brukes surrogatnøkler (*_id) som primærnøkler i tabellene, oppstår ikke problemet med delvis avhengighet, som typisk kan forekomme ved sammensatte primærnøkler. For eksempel er alle attributtene i Utleie funksjonelt avhengige av utleie_id, og kundeattributter er plassert i Kunde-tabellen, ikke i Utleie.
 
 **Vurdering av 3. normalform (3NF):**
 
-Modellen tilfredsstiller 3NF fordi ingen ikke-nøkkelattributter er transitivt avhengige av primærnøkkelen. Hver tabell inneholder kun attributter som beskriver akkurat den entiteten tabellen representerer, og informasjon er ikke duplisert på en måte som skaper avhengigheter via andre ikke-nøkler. For eksempel lagres stasjonsinformasjon i Stasjon-tabellen, mens Lås bare lagrer referanse til stasjon via stasjon_id, og Sykkel lagrer kun referanse til lås via laas_id. Utleie lagrer kun data som hører til selve utleiehendelsen (tidspunkter, beløp og referanser til kunde/sykkel/låser) og ikke kundedata eller stasjonsdata. Dermed unngås redundans og oppdateringsanomalier, og modellen anses å være på 3NF.
+Modellen tilfredsstiller 3NF fordi ingen ikke-nøkkelattributter er transitivt avhengige av primærnøkkelen. Hver tabell inneholder kun attributter som beskriver den entiteten tabellen representerer, og informasjon er ikke duplisert på en måte som skaper avhengigheter via andre ikke-nøkkelattributter. For eksempel lagres stasjonsinformasjon i Stasjon-tabellen, mens Lås kun lagrer en referanse til stasjon via stasjon_id, og Sykkel lagrer kun en referanse til lås via laas_id. Utleie inneholder bare data som knytter seg til selve utleiehendelsen, som tidspunkter, beløp og referanser til kunde, sykkel og låser, og ikke kundedata eller stasjonsdata. Dermed unngås redundans og oppdateringsanomalier, og modellen kan anses å være i 3NF.
 
 **Eventuelle justeringer:**
 
@@ -154,11 +233,11 @@ Modellen tilfredsstiller 3NF fordi ingen ikke-nøkkelattributter er transitivt a
 
 **Antall testdata:**
 
-- Kunder: [antall]
-- Sykler: [antall]
-- Sykkelstasjoner: [antall]
-- Låser: [antall]
-- Utleier: [antall]
+- Kunder: [5]
+- Sykler: [100 (80 tilkoblet låser og 20 som starter som "utleid")]
+- Sykkelstasjoner: [5]
+- Låser: [100 (20 låser per stasjon)]
+- Utleier: [50]
 
 ---
 
@@ -240,8 +319,7 @@ WHERE k.epost = CURRENT_USER; -- Antar at brukernavnet i DB matcher e-posten]
 
 **Ulempe med VIEW vs. POLICIES:**
 
-"En ulempe med VIEW er at det er lett å omgå hvis brukeren får direkte tilgang til den underliggende tabellen. Med POLICY er sikkerheten innebygd i selve tabellen, slik at filteret alltid gjelder uansett hvilken spørring eller visning som brukes.
-
+En ulempe med å bruke VIEW er at den enkelt kan omgås dersom brukeren får direkte tilgang til den underliggende tabellen. Med POLICY er sikkerheten derimot implementert på selve tabellnivået, slik at filtreringen alltid håndheves, uavhengig av hvilken spørring eller visning som benyttes.
 ---
 
 ## Del 4: Analyse og Refleksjon
@@ -256,17 +334,25 @@ WHERE k.epost = CURRENT_USER; -- Antar at brukernavnet i DB matcher e-posten]
 
 **Totalt antall utleier per år:**
 
-[Vi deler året inn i de tre gitte sesongene:Høysesong (5 mnd: mai–sept): $20\,000 \times 5 = 100\,000$ utleierMellomsesong (4 mnd: mars, april, okt, nov): $5\,000 \times 4 = 20\,000$ utleierLavsesong (3 mnd: des–feb): $500 \times 3 = 1\,500$ utleierTotalt antall utleier per år: $121\,500$ utleier]
+Vi deler året inn i tre sesonger:
+Høysesong (mai–september, 5 måneder): $20,000 \times 5 = 100,000$ utleier
+Mellomsesong (mars, april, oktober, november, 4 måneder): $5,000 \times 4 = 20,000$ utleier
+Lavsesong (desember–februar, 3 måneder): $500 \times 3 = 1,500$ utleier
+Totalt antall utleier per år blir dermed 121,500.
 
 **Estimat for lagringskapasitet:**
 
-[For å beregne lagringskapasiteten ser vi på tabellen som vokser mest, nemlig utleie. De andre tabellene (stasjon, kunde, sykkel) er små og relativt statiske, så de vil utgjøre under 1 MB totalt.]
+[For å beregne lagringskapasiteten ser vi på tabellen som vokser mest, nemlig Utleie. De andre tabellene, Stasjon, Kunde og Sykkel, er små og relativt statiske, og vil til sammen utgjøre mindre enn 1 MB.]
 
 Beregning per rad i utleie-tabellen:Hver rad består av følgende datatyper (standard PostgreSQL-størrelser):utleie_id (BIGINT): 8 byteskunde_id (BIGINT): 8 bytessykkel_id (BIGINT): 8 bytesutlevert_tid (TIMESTAMPTZ): 8 bytesinnlevert_tid (TIMESTAMPTZ): 8 bytesleiebelop (NUMERIC): ca. 10 bytesfra_laas_id (BIGINT): 8 bytestil_laas_id (BIGINT): 8 bytesRådata totalt per rad: 66 bytesI tillegg kommer:PostgreSQL overhead: Ca. 24 bytes per rad (row header).Indekser: Vi har opprettet 4 indekser på denne tabellen. Vi beregner ca. 25% ekstra plass for disse.Total størrelse per rad: $(66 + 24) \times 1,25 \approx \mathbf{113 \text{ bytes per rad}}$.
 
 **Totalt for første år:**
 
-[Vi multipliserer antall utleier med estimert størrelse per rad:$121\,500 \text{ utleier} \times 113 \text{ bytes} \approx 13\,729\,500 \text{ bytes}$Dette tilsvarer ca. $13,7 \text{ MB}$.Estimat:Inkludert faste data for stasjoner, sykler og kunder, samt litt buffer for loggfiler og systemtabeller, estimeres den nødvendige lagringskapasiteten for det første driftsåret til å være ca. 15–20 MB.]
+[For å beregne total lagringskapasitet multipliserer vi antall utleier med estimert størrelse per rad:
+
+121500 utleier × 113bytes ≈ 13 729 500 bytes
+Dette tilsvarer omtrent 13,7 MB.
+Når vi inkluderer faste data for stasjoner, sykler og kunder, samt legger inn litt buffer for loggfiler og systemtabeller, estimeres den nødvendige lagringskapasiteten for det første driftsåret til å være rundt 15–20 MB.]
 
 ---
 
