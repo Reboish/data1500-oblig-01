@@ -234,9 +234,9 @@ Modellen tilfredsstiller 3NF fordi ingen ikke-nøkkelattributter er transitivt a
 **Antall testdata:**
 
 - Kunder: [5]
-- Sykler: [100 (80 tilkoblet låser og 20 som starter som "utleid")]
+- Sykler: [100]
 - Sykkelstasjoner: [5]
-- Låser: [100 (20 låser per stasjon)]
+- Låser: [100]
 - Utleier: [50]
 
 ---
@@ -335,9 +335,9 @@ En ulempe med å bruke VIEW er at den enkelt kan omgås dersom brukeren får dir
 **Totalt antall utleier per år:**
 
 Vi deler året inn i tre sesonger:
-Høysesong (mai–september, 5 måneder): $20,000 \times 5 = 100,000$ utleier
-Mellomsesong (mars, april, oktober, november, 4 måneder): $5,000 \times 4 = 20,000$ utleier
-Lavsesong (desember–februar, 3 måneder): $500 \times 3 = 1,500$ utleier
+Høysesong (mai–september, 5 måneder): 20,000 * 5 = 100,000 utleier
+Mellomsesong (mars, april, oktober, november, 4 måneder): 5,000 * 4 = 20,000 utleier
+Lavsesong (desember–februar, 3 måneder): 500 \times 3 * utleier
 Totalt antall utleier per år blir dermed 121,500.
 
 **Estimat for lagringskapasitet:**
@@ -401,21 +401,27 @@ Når vi inkluderer faste data for stasjoner, sykler og kunder, samt legger inn l
 
 ---
 
+
+
+
 ### Oppgave 4.3: Datastrukturer for logging
 
 **Foreslått datastruktur:**
 
 [LSM-tree (Log-Structured Merge-tree) eller en enkel Heap-fil.]
 
-**Begrunnelse:**Logging er en typisk "append-only"-operasjon. Det betyr at vi bare legger til nye hendelser i slutten av en fil eller struktur, og vi endrer eller sletter nesten aldri gamle logginnslag. For en slik arbeidsmengde er strukturer som B-trær (som PostgreSQL bruker for vanlige indekser) dårlig egnet, fordi de krever mye "vedlikehold" og flytting av data for å holde treet balansert hver gang noe settes inn.
+**Begrunnelse:**
+logging er en LSM-tree (Log-Structured Merge-tree) eller en enkel heap-fil godt egnet datastrukturvalg, siden logging er typisk en "append-only"-operasjon der nye hendelser legges til, og gamle logginnslag sjelden endres eller slettes. Tradisjonelle B-trær, som PostgreSQL bruker for vanlige indekser, er mindre effektive for denne typen arbeidsmengde, fordi de krever mye vedlikehold og balansering ved hver innsetting.
 
 **Skrive-operasjoner:**
+Skriveoperasjoner i både heap-filer og LSM-trær er svært raske, ettersom de utnytter sekvensiell I/O. I en heap-fil skrives data rett til slutten av fila ($O(1)$), mens et LSM-tre samler skriver i en buffer i minnet og skriver store sorterte blokker til disk. Dette er mye mer effektivt enn tilfeldig I/O, hvor skrivehodet må hoppe rundt på en tradisjonell harddisk, eller hvor SSD-kontrolleren må håndtere mange små operasjoner. På denne måten sikres det at loggingen ikke blir en flaskehals for resten av databasen.
 
-[LSM-trær og heap-filer er ekstremt effektive for skriving fordi de benytter seg av sekvensiell I/O.I en heap-fil skriver man bare dataene rett i slutten av fila ($O(1)$ tidskompleksitet).I et LSM-tre samles skriveoperasjoner opp i en buffer i minnet (RAM) og skrives ned til disk i store blokker som sorterte filer.Dette er mye raskere enn "random I/O", hvor skrivehodet på en tradisjonell harddisk må hoppe rundt for å finne riktig plass, eller hvor SSD-kontrolleren må utføre mange små skriveoperasjoner. Dette sikrer at loggingen ikke blir en flaskehals for resten av databasen.]
 
 **Lese-operasjoner:**
+Leseoperasjoner er derimot sjeldne i et loggsystem, vanligvis kun ved feilsøking eller sikkerhetsrevisjon. I en heap-fil kan lesing være tregt, fordi man må skanne hele fila ($O(N)$) for å finne det man leter etter. Et LSM-tre holder data delvis sortert, noe som gjør tidsbaserte søk, for eksempel «hva skjedde mellom kl. 12:00 og 13:00?», mer effektive. Siden leseoperasjoner forekommer sjelden, er det ofte en god strategi å ofre noe lesehastighet for å oppnå maksimal skrivehastighet.
 
-[I et loggsystem er leseoperasjoner sjeldne. Vi leser vanligvis bare logger når noe har gått galt (feilsøking) eller ved en sikkerhetsrevisjon.I en enkel heap-fil er lesing tregt fordi man må skanne hele fila ($O(N)$) for å finne det man leter etter.Et LSM-tre er bedre her, da det holder dataene delvis sortert, noe som gjør tidsbaserte søk (f.eks. "hva skjedde mellom kl. 12:00 og 13:00?") mer effektive.Siden vi leser så sjelden, er det et fornuftig bytte å ofre lesehastighet for å få maksimal skrivehastighet.]
+
+
 
 ---
 
