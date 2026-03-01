@@ -44,6 +44,7 @@ For å sikre at dataene i databasen er korrekte, er det lagt inn flere CHECK-con
 
 **ER-diagram:**
 
+""""mermaid
 erDiagram
     KUNDE {
         BIGINT kunde_id
@@ -102,6 +103,7 @@ I datamodellen er det hovedsakelig brukt surrogatnøkler, altså kunstige ID-fel
 
 **Oppdatert ER-diagram:**
 
+""""mermaid
 erDiagram
     KUNDE {
         BIGINT kunde_id PK
@@ -151,7 +153,7 @@ erDiagram
 
 **Identifiserte forhold og kardinalitet:**
 
-Identifiserte forhold og kardinalitet: En stasjon har mange låser, og hver lås tilhører én stasjon (1–til–mange: Stasjon (1) → Lås (N)), implementert med fremmednøkkelen laas.stasjon_id. En lås kan ha 0 eller 1 sykkel parkert, og en sykkel kan stå i 0 eller 1 lås (valgfri 1–til–1-relasjon på begge sider: Lås (0..1) ↔ Sykkel (0..1)). Dette implementeres ved at sykkel.laas_id er en fremmednøkkel som kan være NULL, kombinert med en UNIQUE-regel på sykkel.laas_id for å hindre at flere sykler peker på samme lås. En kunde kan ha mange utleier, mens hver utleie tilhører én kunde (1–til–mange: Kunde (1) → Utleie (N)), implementert med utleie.kunde_id. En sykkel kan brukes i mange utleier over tid, men hver utleie gjelder én sykkel (1–til–mange: Sykkel (1) → Utleie (N)), implementert med utleie.sykkel_id. Forholdet mellom kunde og sykkel er dermed mange–til–mange over tid, siden en kunde kan leie mange sykler og en sykkel kan leies av mange kunder. Dette løses gjennom den assosiative entiteten Utleie (Kunde ↔ Utleie ↔ Sykkel). I tillegg registrerer Utleie hvor leieforholdet startet og sluttet: hver utleie har én startlås og 0 eller 1 sluttlås. Dette gir en 1–til–mange-relasjon fra Lås til Utleie, implementert via utleie.fra_laas_id og utleie.til_laas_id, der til_laas_id kan være NULL frem til innlevering.
+Identifiserte forhold og kardinalitet: En stasjon har mange låser, og hver lås tilhører én stasjon (1–til–mange: Stasjon (1) – Lås (N)), implementert med fremmednøkkelen laas.stasjon_id. En lås kan ha 0 eller 1 sykkel parkert, og en sykkel kan stå i 0 eller 1 lås (valgfri 1–til–1-relasjon på begge sider: Lås (0..1) – Sykkel (0..1)). Dette implementeres ved at sykkel.laas_id er en fremmednøkkel som kan være NULL, kombinert med en UNIQUE-regel som hindrer at flere sykler peker på samme lås. En kunde kan ha mange utleier, mens hver utleie tilhører én kunde (1–til–mange: Kunde (1) – Utleie (N)), implementert med utleie.kunde_id. En sykkel kan brukes i mange utleier over tid, men hver utleie gjelder én sykkel (1–til–mange: Sykkel (1) – Utleie (N)), implementert med utleie.sykkel_id. Forholdet mellom kunde og sykkel er dermed mange–til–mange over tid, siden en kunde kan leie flere sykler og en sykkel kan leies av flere kunder. Dette løses gjennom den assosiative entiteten Utleie (Kunde – Utleie – Sykkel). I tillegg registrerer Utleie hvor leieforholdet startet og sluttet: hver utleie har én startlås og 0 eller 1 sluttlås. Dette gir en 1–til–mange-relasjon fra Lås til Utleie, implementert via utleie.fra_laas_id og utleie.til_laas_id, der til_laas_id kan være NULL frem til innlevering.
 
 **Fremmednøkler:**
 
@@ -159,6 +161,7 @@ Fremmednøkler brukes for å implementere relasjonene mellom entitetene og sikre
 
 **Oppdatert ER-diagram:**
 
+""""mermaid
 erDiagram
     KUNDE {
         BIGINT kunde_id PK
