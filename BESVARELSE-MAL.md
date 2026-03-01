@@ -218,8 +218,7 @@ Datamodellen tilfredsstiller 1NF fordi alle tabeller har tydelig definerte rader
 Modellen tilfredsstiller 2NF fordi alle tabeller enten har en enkel (ikke-sammensatt) primærnøkkel, eller fordi alle ikke-nøkkelattributter er fullstendig funksjonelt avhengige av hele primærnøkkelen. Siden det brukes surrogatnøkler (*_id) som primærnøkler i tabellene, oppstår ikke problemet med delvis avhengighet, som typisk kan forekomme ved sammensatte primærnøkler. For eksempel er alle attributtene i Utleie funksjonelt avhengige av utleie_id, og kundeattributter er plassert i Kunde-tabellen, ikke i Utleie.
 
 **Vurdering av 3. normalform (3NF):**
-
-Modellen tilfredsstiller 3NF fordi ingen ikke-nøkkelattributter er transitivt avhengige av primærnøkkelen. Hver tabell inneholder kun attributter som beskriver den entiteten tabellen representerer, og informasjon er ikke duplisert på en måte som skaper avhengigheter via andre ikke-nøkkelattributter. For eksempel lagres stasjonsinformasjon i Stasjon-tabellen, mens Lås kun lagrer en referanse til stasjon via stasjon_id, og Sykkel lagrer kun en referanse til lås via laas_id. Utleie inneholder bare data som knytter seg til selve utleiehendelsen, som tidspunkter, beløp og referanser til kunde, sykkel og låser, og ikke kundedata eller stasjonsdata. Dermed unngås redundans og oppdateringsanomalier, og modellen kan anses å være i 3NF.
+Etter å ha gått gjennom tabellene og sett på hvilke attributter som hører naturlig sammen, mener jeg derfor at modellen er 3NF. 3NF fordi ingen ikke-nøkkelattributter er transitivt avhengige av primærnøkkelen. Hver tabell inneholder kun attributter som beskriver den entiteten tabellen representerer, og informasjon er ikke duplisert på en måte som skaper avhengigheter via andre ikke-nøkkelattributter. For eksempel lagres stasjonsinformasjon i Stasjon-tabellen, mens Lås kun lagrer en referanse til stasjon via stasjon_id, og Sykkel lagrer kun en referanse til lås via laas_id. Utleie inneholder bare data som knytter seg til selve utleiehendelsen, som tidspunkter, beløp og referanser til kunde, sykkel og låser, og ikke kundedata eller stasjonsdata. Dermed unngås redundans og oppdateringsanomalier, og modellen kan anses å være i 3NF.
 
 **Eventuelle justeringer:**
 
@@ -385,7 +384,6 @@ Når vi inkluderer faste data for stasjoner, sykler og kunder, samt legger inn l
 
 
 
-
 **Fordeler med en indeks:**
 
 Hvis man ikke hadde en indeks måtte databasen utføre en Sequential Scan. Det betyr at den må lese hver eneste rad fra start til slutt for å finne feks. alle utleier for City Bike Pro. Med en indeks lager vi en snarvei som peker direkte til radene.
@@ -417,11 +415,11 @@ LSM-tree eller en enkel Heap-fil.
 logging er en LSM-tree eller en enkel heap-fil godt egnet datastrukturvalg, siden logging er typisk en "append-only"-operasjon der nye hendelser legges til, og gamle logginnslag sjelden endres eller slettes. Tradisjonelle B-trær, som PostgreSQL bruker for vanlige indekser, er mindre effektive for denne typen arbeidsmengde, fordi de krever mye vedlikehold og balansering ved hver innsetting.
 
 **Skrive-operasjoner:**
-Skriveoperasjoner i både heap-filer og LSM-trær er svært raske, ettersom de utnytter sekvensiell I/O. I en heap-fil skrives data rett til slutten av fila ($O(1)$), mens et LSM-tre samler skriver i en buffer i minnet og skriver store sorterte blokker til disk. Dette er mye mer effektivt enn tilfeldig I/O, hvor skrivehodet må hoppe rundt på en tradisjonell harddisk, eller hvor SSD-kontrolleren må håndtere mange små operasjoner. På denne måten sikres det at loggingen ikke blir en flaskehals for resten av databasen.
+Skriveoperasjoner i både heap-filer og LSM-trær er svært raske, ettersom de utnytter sekvensiell I/O. I en heap-fil skrives data rett til slutten av fila, mens et LSM-tre samler skriver i en buffer i minnet og skriver store sorterte blokker til disk. Dette er mye mer effektivt enn tilfeldig, hvor skrivehodet må hoppe rundt på en tradisjonell harddisk, eller hvor SSD-kontrolleren må håndtere mange små operasjoner. På denne måten sikres det at loggingen ikke blir en flaskehals for resten av databasen.
 
 
 **Lese-operasjoner:**
-Leseoperasjoner er derimot sjeldne i et loggsystem, vanligvis kun ved feilsøking eller sikkerhetsrevisjon. I en heap-fil kan lesing være tregt, fordi man må skanne hele fila ($O(N)$) for å finne det man leter etter. Et LSM-tre holder data delvis sortert, noe som gjør tidsbaserte søk, for eksempel «hva skjedde mellom kl. 12:00 og 13:00?», mer effektive. Siden leseoperasjoner forekommer sjelden, er det ofte en god strategi å ofre noe lesehastighet for å oppnå maksimal skrivehastighet.
+Leseoperasjoner er derimot sjeldne i et loggsystem, vanligvis kun ved feilsøking eller sikkerhetsrevisjon. I en heap-fil kan lesing være tregt, fordi man må skanne hele fila for å finne det man leter etter. Et LSM-tre holder data delvis sortert, noe som gjør tidsbaserte søk, for eksempel «hva skjedde mellom kl. 12:00 og 13:00?», mer effektive. Siden leseoperasjoner forekommer sjelden, er det ofte en god strategi å ofre noe lesehastighet for å oppnå maksimal skrivehastighet.
 
 
 
@@ -451,8 +449,7 @@ Fordelen med å bruke databasen som siste sikkerhetssperre er at den garanterer 
 
 
 **Konklusjon:**
-
-Vi validerer i alle lag for å kombinere det beste fra alle verdener:
+Etter å ha jobbet med denne oppgaven ser jeg tydelig hvorfor validering er viktig. Uten det kan systemet enten bli frustrerende å bruke, eller ende opp med inkonsistente data:
 
 Nettleser: For hastighet og brukervennlighet.
 Applikasjonslag: For sikkerhet og kompleks logikk.
@@ -469,7 +466,7 @@ Gjennom de første ukene har jeg fått en dypere forståelse for forskjellen på
 
 **Hvordan har denne oppgaven bidratt til å oppnå læringsmålene:**
 
-Denne oppgaven har vært avgjørende for å koble teori til praksis i tråd med emnets læringsmål:
+Denne oppgaven har vært avgjørende for å koble teori til praksis med emnets læringsmål:
 
 Installasjon og oppsett: Ved å bruke Docker og docker-compose har jeg lært å sette opp et profesjonelt utviklingsmiljø for PostgreSQL.
 SQL-ferdigheter: Jeg har praktisert DDL (Data Definition Language) for å bygge tabellstruktur og DML (Data Manipulation Language) for å manipulere testdata.
@@ -482,7 +479,7 @@ Se oversikt over læringsmålene i en PDF-fil i Canvas https://oslomet.instructu
 
 **Hva var mest utfordrende:**
 
-Det mest utfordrende var feilsøking i initialiseringsskriptet. Å forstå hvorfor en Foreign Key Constraint-feil oppstod under datainnsetting krevde en nøye gjennomgang av rekkefølgen tabellene ble opprettet og populert på. Det var også krevende, men lærerikt, å sette opp Docker-miljøet slik at SQL-skriptet ble kjørt automatisk ved oppstart av containeren, spesielt når små syntaksfeil i SQL-koden førte til at hele containeren stoppet.
+Det mest utfordrende var feilsøking i initialiseringsskriptet. Å forstå hvorfor en Foreign Key Constraint-feil oppstod under datainnsetting krevde en nøye gjennomgang av rekkefølgen tabellene ble opprettet og populert på. Det var også krevende, men lærerikt, å sette opp Docker-miljøet slik at SQL-skriptet ble kjørt automatisk ved oppstart av containeren, spesielt når små syntaksfeil i SQL-koden førte til at hele containeren stoppet. Også når det gjaldt å runne git bash og se gjennom feil ved logg.
 
 **Hva har du lært om databasedesign:**
 
