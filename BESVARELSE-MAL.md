@@ -339,14 +339,14 @@ En ulempe med å bruke VIEW er at den enkelt kan omgås dersom brukeren får dir
 Vi deler året inn i tre sesonger:
 Høysesong (mai–september, 5 måneder): 20,000 * 5 = 100,000 utleier
 Mellomsesong (mars, april, oktober, november, 4 måneder): 5,000 * 4 = 20,000 utleier
-Lavsesong (desember–februar, 3 måneder): 500 \times 3 * utleier
+Lavsesong (desember–februar, 3 måneder): 500 * 3 = 1500 utleier
 Totalt antall utleier per år blir dermed 121,500.
 
 **Estimat for lagringskapasitet:**
 
 [For å beregne lagringskapasiteten ser vi på tabellen som vokser mest, nemlig Utleie. De andre tabellene, Stasjon, Kunde og Sykkel, er små og relativt statiske, og vil til sammen utgjøre mindre enn 1 MB.]
 
-Beregning per rad i utleie-tabellen:Hver rad består av følgende datatyper (standard PostgreSQL-størrelser):utleie_id (BIGINT): 8 byteskunde_id (BIGINT): 8 bytessykkel_id (BIGINT): 8 bytesutlevert_tid (TIMESTAMPTZ): 8 bytesinnlevert_tid (TIMESTAMPTZ): 8 bytesleiebelop (NUMERIC): ca. 10 bytesfra_laas_id (BIGINT): 8 bytestil_laas_id (BIGINT): 8 bytesRådata totalt per rad: 66 bytesI tillegg kommer:PostgreSQL overhead: Ca. 24 bytes per rad (row header).Indekser: Vi har opprettet 4 indekser på denne tabellen. Vi beregner ca. 25% ekstra plass for disse.Total størrelse per rad: $(66 + 24) \times 1,25 \approx \mathbf{113 \text{ bytes per rad}}$.
+Beregning per rad i utleie-tabellen:Hver rad består av følgende datatyper (standard PostgreSQL-størrelser):utleie_id (BIGINT): 8 byteskunde_id (BIGINT): 8 bytessykkel_id (BIGINT): 8 bytesutlevert_tid (TIMESTAMPTZ): 8 bytesinnlevert_tid (TIMESTAMPTZ): 8 bytesleiebelop (NUMERIC): ca. 10 bytesfra_laas_id (BIGINT): 8 bytestil_laas_id (BIGINT): 8 bytesRådata totalt per rad: 66 bytesI tillegg kommer:PostgreSQL overhead: Ca. 24 bytes per rad (row header).Indekser: Vi har opprettet 4 indekser på denne tabellen. Vi beregner ca. 25% ekstra plass for disse.Total størrelse per rad: (66 + 24) * 1,25 ≈ 113 bytes per rad
 
 **Totalt for første år:**
 
