@@ -44,7 +44,7 @@ For å sikre at dataene i databasen er korrekte, er det lagt inn flere CHECK-con
 
 **ER-diagram:**
 
-""Mermaid
+`mermaid
 erDiagram
     KUNDE {
         BIGINT kunde_id
@@ -103,7 +103,7 @@ I datamodellen er det hovedsakelig brukt surrogatnøkler, altså kunstige ID-fel
 
 **Oppdatert ER-diagram:**
 
-""""mermaid
+`mermaid
 erDiagram
     KUNDE {
         BIGINT kunde_id PK
@@ -161,7 +161,7 @@ Fremmednøkler brukes for å implementere relasjonene mellom entitetene og sikre
 
 **Oppdatert ER-diagram:**
 
-""""mermaid
+`mermaid
 erDiagram
     KUNDE {
         BIGINT kunde_id PK
