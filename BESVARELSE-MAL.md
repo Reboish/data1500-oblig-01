@@ -2,9 +2,9 @@
 
 **Student:** [Rebin Hawar Aradeni]
 
-**Studentnummer:** [Ditt studentnummer]
+**Studentnummer:** [7720]
 
-**Dato:** [Innleveringsdato]
+**Dato:** [01.03.2026]
 
 ---
 
