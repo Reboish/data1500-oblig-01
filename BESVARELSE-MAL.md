@@ -44,7 +44,7 @@ For å sikre at dataene i databasen er korrekte, er det lagt inn flere CHECK-con
 
 **ER-diagram:**
 
-""""mermaid
+""""Mermaid
 erDiagram
     KUNDE {
         BIGINT kunde_id
