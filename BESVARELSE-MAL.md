@@ -44,7 +44,7 @@ For å sikre at dataene i databasen er korrekte, er det lagt inn flere CHECK-con
 
 **ER-diagram:**
 
-`mermaid
+````mermaid
 erDiagram
     KUNDE {
         BIGINT kunde_id
@@ -87,7 +87,7 @@ erDiagram
     SYKKEL ||--o{ UTLEIE : brukes_i
     LAAS ||--o{ UTLEIE : fra
     LAAS ||--o{ UTLEIE : til
-
+````
 
 ---
 
@@ -103,7 +103,7 @@ I datamodellen er det hovedsakelig brukt surrogatnøkler, altså kunstige ID-fel
 
 **Oppdatert ER-diagram:**
 
-`mermaid
+````mermaid
 erDiagram
     KUNDE {
         BIGINT kunde_id PK
@@ -146,7 +146,7 @@ erDiagram
     SYKKEL ||--o{ UTLEIE : brukes_i
     LAAS ||--o{ UTLEIE : fra
     LAAS ||--o{ UTLEIE : til
-
+````
 ---
 
 ### Oppgave 1.4: Forhold og fremmednøkler
@@ -161,7 +161,7 @@ Fremmednøkler brukes for å implementere relasjonene mellom entitetene og sikre
 
 **Oppdatert ER-diagram:**
 
-`mermaid
+````mermaid
 erDiagram
     KUNDE {
         BIGINT kunde_id PK
@@ -204,6 +204,7 @@ erDiagram
     SYKKEL ||--o{ UTLEIE : brukes_i
     LAAS ||--o{ UTLEIE : fra
     LAAS ||--o{ UTLEIE : til
+````
 ---
 
 ### Oppgave 1.5: Normalisering
